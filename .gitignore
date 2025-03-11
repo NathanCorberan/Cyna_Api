@@ -1,0 +1,43 @@
+### Symfony ###
+/var/
+/vendor/
+/.env
+/.env.local
+/.env.*.local
+/.phpunit.result.cache
+/node_modules/
+/public/build/
+/public/uploads/
+
+### Logs et cache ###
+/var/log/
+/var/cache/
+
+### Fichiers de tests et coverage ###
+/coverage/
+/phpunit.xml
+/phpunit.xml.dist
+
+### Fichiers spécifiques aux IDE ###
+/.idea/
+/.vscode/
+/nbproject/
+
+### Dépendances Composer ###
+/composer.phar
+/composer.lock
+
+### Dépendances NPM/Yarn ###
+/yarn.lock
+/package-lock.json
+
+### Docker (si utilisé) ###
+/docker-compose.override.yml
+/.docker/
+
+### Autres fichiers inutiles ###
+/*.swp
+*.bak
+*.tmp
+.DS_Store
+Thumbs.db
