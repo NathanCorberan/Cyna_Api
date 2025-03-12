@@ -1,10 +1,22 @@
 api_platform:
-    title: Hello API Platform
-    version: 1.0.0
+    title: "Cyna API"
+    description: "API de gestion des utilisateurs, produits et abonnements"
+    version: "1.0.0"
     formats:
         jsonld: ['application/ld+json']
         json: ['application/json']
+    docs_formats:
+        jsonld: ['application/ld+json']
+        json: ['application/json']
+        html: ['text/html']
     defaults:
         stateless: true
         cache_headers:
             vary: ['Content-Type', 'Authorization', 'Origin']
+    swagger:
+        api_keys:
+            JWT:
+                name: Authorization
+                type: header
+    enable_swagger_ui: true
+    enable_re_doc: false
