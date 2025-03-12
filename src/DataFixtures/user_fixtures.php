@@ -54,4 +54,17 @@ return array (
     'isActivate' => true,
     'password' => '$2y$13$SriD8pEFlYH3LCh41qm3M.6qTXVkjGBP7inF.yUEnab2u.Fae8HoO',
   ),
+  4 => 
+  array (
+    'id' => 13,
+    'email' => 'nathan.corberan@gmail.fr',
+    'roles' => 
+    array (
+      0 => 'ROLE_USER',
+    ),
+    'first_name' => 'nathan',
+    'last_name' => 'corberan',
+    'isActivate' => true,
+    'password' => 'caribou',
+  ),
 );

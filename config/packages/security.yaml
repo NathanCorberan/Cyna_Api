@@ -1,6 +1,7 @@
 security:
     password_hashers:
-        Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
+        Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface:
+            algorithm: bcrypt
     providers:
         app_user_provider:
             entity:
@@ -28,8 +29,8 @@ security:
             # provider: app_user_provider
     access_control:
         - { path: ^/api/login, roles: IS_AUTHENTICATED_ANONYMOUSLY }
-        - { path: ^/api/users, methods: [POST], roles: IS_AUTHENTICATED_ANONYMOUSLY }
-        - { path: ^/api/users, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/users, methods: [POST], roles: PUBLIC_ACCESS } # Autoriser l'inscription
+        - { path: ^/api/users, methods: [GET], roles: IS_AUTHENTICATED_FULLY }
         # - { path: ^/api, roles: PUBLIC_ACCESS }
         
 when@test:
