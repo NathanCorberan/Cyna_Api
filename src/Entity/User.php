@@ -64,9 +64,23 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(targetEntity: Order::class, mappedBy: 'user')]
     private Collection $orders;
 
+    /**
+     * @var Collection<int, Subscription>
+     */
+    #[ORM\OneToMany(targetEntity: Subscription::class, mappedBy: 'user')]
+    private Collection $subscriptions;
+
+    /**
+     * @var Collection<int, UserAddress>
+     */
+    #[ORM\OneToMany(targetEntity: UserAddress::class, mappedBy: 'user')]
+    private Collection $userAddresses;
+
     public function __construct()
     {
         $this->orders = new ArrayCollection();
+        $this->subscriptions = new ArrayCollection();
+        $this->userAddresses = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -203,6 +217,66 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
             // set the owning side to null (unless already changed)
             if ($order->getUser() === $this) {
                 $order->setUser(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Subscription>
+     */
+    public function getSubscriptions(): Collection
+    {
+        return $this->subscriptions;
+    }
+
+    public function addSubscription(Subscription $subscription): static
+    {
+        if (!$this->subscriptions->contains($subscription)) {
+            $this->subscriptions->add($subscription);
+            $subscription->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeSubscription(Subscription $subscription): static
+    {
+        if ($this->subscriptions->removeElement($subscription)) {
+            // set the owning side to null (unless already changed)
+            if ($subscription->getUser() === $this) {
+                $subscription->setUser(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, UserAddress>
+     */
+    public function getUserAddresses(): Collection
+    {
+        return $this->userAddresses;
+    }
+
+    public function addUserAddress(UserAddress $userAddress): static
+    {
+        if (!$this->userAddresses->contains($userAddress)) {
+            $this->userAddresses->add($userAddress);
+            $userAddress->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeUserAddress(UserAddress $userAddress): static
+    {
+        if ($this->userAddresses->removeElement($userAddress)) {
+            // set the owning side to null (unless already changed)
+            if ($userAddress->getUser() === $this) {
+                $userAddress->setUser(null);
             }
         }
 
