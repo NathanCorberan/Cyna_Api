@@ -10,7 +10,7 @@ use Doctrine\Migrations\AbstractMigration;
 /**
  * Auto-generated Migration: Please modify to your needs!
  */
-final class Version20250312102955 extends AbstractMigration
+final class Version20250312144408 extends AbstractMigration
 {
     public function getDescription(): string
     {
@@ -24,9 +24,14 @@ final class Version20250312102955 extends AbstractMigration
         $this->addSql('CREATE UNIQUE INDEX UNIQ_IDENTIFIER_PANEL_ORDER ON carousel (panel_order)');
         $this->addSql('CREATE TABLE carousel_langage (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, carousel_id INTEGER NOT NULL, code VARCHAR(2) NOT NULL, title VARCHAR(50) DEFAULT NULL, description CLOB DEFAULT NULL, CONSTRAINT FK_AEFF3F08C1CE5B98 FOREIGN KEY (carousel_id) REFERENCES carousel (id) NOT DEFERRABLE INITIALLY IMMEDIATE)');
         $this->addSql('CREATE INDEX IDX_AEFF3F08C1CE5B98 ON carousel_langage (carousel_id)');
+        $this->addSql('CREATE TABLE "category" (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, name VARCHAR(50) NOT NULL, creation_date VARCHAR(50) NOT NULL, category_order INTEGER NOT NULL)');
+        $this->addSql('CREATE TABLE category_image (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, category_id INTEGER NOT NULL, name VARCHAR(50) DEFAULT NULL, image_link CLOB NOT NULL, CONSTRAINT FK_2D0E4B1612469DE2 FOREIGN KEY (category_id) REFERENCES "category" (id) NOT DEFERRABLE INITIALLY IMMEDIATE)');
+        $this->addSql('CREATE INDEX IDX_2D0E4B1612469DE2 ON category_image (category_id)');
         $this->addSql('CREATE TABLE homepage (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, image_link CLOB DEFAULT NULL)');
         $this->addSql('CREATE TABLE homepage_langage (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, homepage_id INTEGER NOT NULL, title VARCHAR(50) NOT NULL, description CLOB NOT NULL, CONSTRAINT FK_D5418E00571EDDA FOREIGN KEY (homepage_id) REFERENCES homepage (id) NOT DEFERRABLE INITIALLY IMMEDIATE)');
         $this->addSql('CREATE INDEX IDX_D5418E00571EDDA ON homepage_langage (homepage_id)');
+        $this->addSql('CREATE TABLE "order" (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, user_id INTEGER NOT NULL, order_date VARCHAR(50) NOT NULL, total_amount NUMERIC(6, 2) NOT NULL, CONSTRAINT FK_F5299398A76ED395 FOREIGN KEY (user_id) REFERENCES user (id) NOT DEFERRABLE INITIALLY IMMEDIATE)');
+        $this->addSql('CREATE INDEX IDX_F5299398A76ED395 ON "order" (user_id)');
         $this->addSql('CREATE TABLE order_product (order_id INTEGER NOT NULL, product_id INTEGER NOT NULL, PRIMARY KEY(order_id, product_id), CONSTRAINT FK_2530ADE68D9F6D38 FOREIGN KEY (order_id) REFERENCES "order" (id) ON DELETE CASCADE NOT DEFERRABLE INITIALLY IMMEDIATE, CONSTRAINT FK_2530ADE64584665A FOREIGN KEY (product_id) REFERENCES product (id) ON DELETE CASCADE NOT DEFERRABLE INITIALLY IMMEDIATE)');
         $this->addSql('CREATE INDEX IDX_2530ADE68D9F6D38 ON order_product (order_id)');
         $this->addSql('CREATE INDEX IDX_2530ADE64584665A ON order_product (product_id)');
@@ -41,6 +46,9 @@ final class Version20250312102955 extends AbstractMigration
         $this->addSql('CREATE INDEX IDX_A3C664D3B6596C08 ON subscription (subscription_type_id)');
         $this->addSql('CREATE TABLE subscription_type (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, product_id INTEGER NOT NULL, type VARCHAR(100) NOT NULL, price NUMERIC(15, 2) NOT NULL, CONSTRAINT FK_BBE247374584665A FOREIGN KEY (product_id) REFERENCES product (id) NOT DEFERRABLE INITIALLY IMMEDIATE)');
         $this->addSql('CREATE INDEX IDX_BBE247374584665A ON subscription_type (product_id)');
+        $this->addSql('CREATE TABLE user (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, email VARCHAR(180) NOT NULL, roles CLOB NOT NULL --(DC2Type:json)
+        , password VARCHAR(255) NOT NULL, first_name VARCHAR(50) NOT NULL, last_name VARCHAR(50) NOT NULL, is_activate BOOLEAN NOT NULL)');
+        $this->addSql('CREATE UNIQUE INDEX UNIQ_IDENTIFIER_EMAIL ON user (email)');
         $this->addSql('CREATE TABLE user_address (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, user_id INTEGER NOT NULL, address VARCHAR(100) NOT NULL, city VARCHAR(50) NOT NULL, country VARCHAR(50) NOT NULL, CONSTRAINT FK_5543718BA76ED395 FOREIGN KEY (user_id) REFERENCES user (id) NOT DEFERRABLE INITIALLY IMMEDIATE)');
         $this->addSql('CREATE INDEX IDX_5543718BA76ED395 ON user_address (user_id)');
     }
@@ -50,14 +58,18 @@ final class Version20250312102955 extends AbstractMigration
         // this down() migration is auto-generated, please modify it to your needs
         $this->addSql('DROP TABLE carousel');
         $this->addSql('DROP TABLE carousel_langage');
+        $this->addSql('DROP TABLE "category"');
+        $this->addSql('DROP TABLE category_image');
         $this->addSql('DROP TABLE homepage');
         $this->addSql('DROP TABLE homepage_langage');
+        $this->addSql('DROP TABLE "order"');
         $this->addSql('DROP TABLE order_product');
         $this->addSql('DROP TABLE product');
         $this->addSql('DROP TABLE product_image');
         $this->addSql('DROP TABLE product_langage');
         $this->addSql('DROP TABLE subscription');
         $this->addSql('DROP TABLE subscription_type');
+        $this->addSql('DROP TABLE user');
         $this->addSql('DROP TABLE user_address');
     }
 }
