@@ -8,19 +8,29 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
+use ApiPlatform\Metadata\ApiResource;
+use Symfony\Component\Serializer\Annotation\Groups;
+
 #[ORM\Entity(repositoryClass: CarouselRepository::class)]
 #[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_PANEL_ORDER', fields: ['panel_order'])]
+#[ApiResource(
+    normalizationContext: ['groups' => ['user:read']],
+    denormalizationContext: ['groups' => ['user:write']],
+)]  // Ajoute cette annotation pour exposer l'entité dans l'API
 class Carousel
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['user:read', 'user:write'])]
     private ?int $id = null;
 
     #[ORM\Column(type: Types::TEXT)]
+    #[Groups(['user:read', 'user:write'])]
     private ?string $image_link = null;
 
     #[ORM\Column(type: Types::SMALLINT)]
+    #[Groups(['user:read', 'user:write'])]
     private ?int $panel_order = null;
 
     /**

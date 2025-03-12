@@ -6,8 +6,10 @@ use App\Repository\ProductRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use ApiPlatform\Metadata\ApiResource;
 
 #[ORM\Entity(repositoryClass: ProductRepository::class)]
+#[ApiResource]  // Ajoute cette annotation pour exposer l'entité dans l'API
 class Product
 {
     #[ORM\Id]

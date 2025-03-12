@@ -6,11 +6,13 @@ use App\Repository\CategoryRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use ApiPlatform\Metadata\ApiResource;
 
 #[ORM\Entity(repositoryClass: CategoryRepository::class)]
 #[ORM\Table(name: '`category`', uniqueConstraints: [
     new ORM\UniqueConstraint(name: "UNIQ_CATEGORY_ORDER", columns: ["category_order"]) 
 ])]
+#[ApiResource]  // Ajoute cette annotation pour exposer l'entité dans l'API
 class Category
 {
     #[ORM\Id]

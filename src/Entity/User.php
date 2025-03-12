@@ -18,7 +18,8 @@ use Symfony\Component\Serializer\Annotation\Groups;
 #[ApiResource(
     normalizationContext: ['groups' => ['user:read']],
     denormalizationContext: ['groups' => ['user:write']],
-    processor: UserPasswordHasher::class
+    processor: UserPasswordHasher::class,
+    security: "is_granted('ROLE_ADMIN') or object == user"
 )]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {

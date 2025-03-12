@@ -4,8 +4,10 @@ namespace App\Entity;
 
 use App\Repository\SubscriptionRepository;
 use Doctrine\ORM\Mapping as ORM;
+use ApiPlatform\Metadata\ApiResource;
 
 #[ORM\Entity(repositoryClass: SubscriptionRepository::class)]
+#[ApiResource]  // Ajoute cette annotation pour exposer l'entité dans l'API
 class Subscription
 {
     #[ORM\Id]

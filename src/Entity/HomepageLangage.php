@@ -5,8 +5,10 @@ namespace App\Entity;
 use App\Repository\HomepageLangageRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use ApiPlatform\Metadata\ApiResource;
 
 #[ORM\Entity(repositoryClass: HomepageLangageRepository::class)]
+#[ApiResource]  // Ajoute cette annotation pour exposer l'entité dans l'API
 class HomepageLangage
 {
     #[ORM\Id]
