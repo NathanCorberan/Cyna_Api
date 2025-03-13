@@ -40,7 +40,7 @@ use Symfony\Component\Serializer\Annotation\Groups;
         new Patch(uriTemplate: '/users/{id}'), // ✅ Modifier un utilisateur (/api/users/{id})
         new Delete(uriTemplate: '/users/{id}'), // ✅ Supprimer un utilisateur (/api/users/{id})
         new Get(
-            uriTemplate: '/users/me',
+            uriTemplate: '/me',
             name: 'users_me',
             provider: UserMeProvider::class, // ✅ Le Provider récupère l'utilisateur
             security: "is_granted('IS_AUTHENTICATED_FULLY')"
