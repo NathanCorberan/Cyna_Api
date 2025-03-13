@@ -18,13 +18,27 @@ use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
 use App\State\ProductDataPersister;
 use App\State\ProductStateProvider;
+use App\State\ProductTopOrdersStateProvider;
 
 #[ORM\Entity(repositoryClass: ProductRepository::class)]
 #[ApiResource(
     normalizationContext: ['groups' => ['Product:read']],
     denormalizationContext: ['groups' => ['Product:write']],
     processor: ProductDataPersister::class,
-    provider: ProductStateProvider::class
+    provider: ProductStateProvider::class,
+    operations: [
+        new GetCollection(),
+        new Get(),
+        new Post(), 
+        new Get(uriTemplate: '/products/{id}'),
+        new Patch(uriTemplate: '/products/{id}'), 
+        new Delete(uriTemplate: '/products/{id}'),
+        new Get(
+            uriTemplate: '/top/products',
+            name: 'products_top',
+            provider: ProductTopOrdersStateProvider::class,
+        )
+    ]
 )]
 class Product
 {
