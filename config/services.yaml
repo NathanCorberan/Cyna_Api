@@ -2,8 +2,9 @@ parameters:
 
 services:
     _defaults:
-        autowire: true      # Automatically injects dependencies in your services.
-        autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+        autowire: true
+        autoconfigure: true
+        public: true # ✅ Assure que le service est accessible publiquement
 
     App\:
         resource: '../src/'
@@ -11,3 +12,13 @@ services:
             - '../src/DependencyInjection/'
             - '../src/Entity/'
             - '../src/Kernel.php'
+            
+    App\State\UserMeProvider:
+        autowire: true
+        autoconfigure: true
+        public: true
+
+    App\State\CategoryImageDataPersister:
+        autowire: true
+        autoconfigure: true
+        public: true

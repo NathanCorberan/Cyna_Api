@@ -9,8 +9,14 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use App\State\UserPasswordHasher;
+use App\State\UserMeProvider;
 
 use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\Patch;
+use ApiPlatform\Metadata\Delete;
+use ApiPlatform\Metadata\GetCollection;
 use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
@@ -19,7 +25,27 @@ use Symfony\Component\Serializer\Annotation\Groups;
     normalizationContext: ['groups' => ['user:read']],
     denormalizationContext: ['groups' => ['user:write']],
     processor: UserPasswordHasher::class,
-    security: "is_granted('ROLE_ADMIN') or object == user"
+    security: "is_granted('ROLE_ADMIN') or object == user",
+    operations: [
+        new GetCollection( // ✅ Permet aux admins de voir tous les utilisateurs
+            security: "is_granted('ROLE_ADMIN')",
+            openapi: new \ApiPlatform\OpenApi\Model\Operation(
+                summary: 'Récupère la liste des utilisateurs (admin uniquement)',
+                tags: ['User']
+            )
+        ),
+        new Get(), // ✅ Récupérer la liste des utilisateurs (/api/users)
+        new Post(), // ✅ Créer un utilisateur (/api/users)
+        new Get(uriTemplate: '/users/{id}'), // ✅ Récupérer un utilisateur spécifique (/api/users/{id})
+        new Patch(uriTemplate: '/users/{id}'), // ✅ Modifier un utilisateur (/api/users/{id})
+        new Delete(uriTemplate: '/users/{id}'), // ✅ Supprimer un utilisateur (/api/users/{id})
+        new Get(
+            uriTemplate: '/users/me',
+            name: 'users_me',
+            provider: UserMeProvider::class, // ✅ Le Provider récupère l'utilisateur
+            security: "is_granted('IS_AUTHENTICATED_FULLY')"
+        )
+    ]
 )]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
@@ -37,7 +63,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      * @var list<string> The user roles
      */
     #[ORM\Column]
-    #[Groups(['user:read', 'user:write'])]
+    #[Groups(['user:read'])]
     private array $roles = [];
 
     /**
