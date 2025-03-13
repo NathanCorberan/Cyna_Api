@@ -10,6 +10,9 @@ use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use App\State\UserPasswordHasher;
 use App\State\UserMeProvider;
+use App\State\UserPasswordChangeStateProcessor;
+
+use App\Dto\PasswordChangeDTO;
 
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Get;
@@ -34,15 +37,22 @@ use Symfony\Component\Serializer\Annotation\Groups;
                 tags: ['User']
             )
         ),
-        new Get(), // ✅ Récupérer la liste des utilisateurs (/api/users)
-        new Post(), // ✅ Créer un utilisateur (/api/users)
-        new Get(uriTemplate: '/users/{id}'), // ✅ Récupérer un utilisateur spécifique (/api/users/{id})
-        new Patch(uriTemplate: '/users/{id}'), // ✅ Modifier un utilisateur (/api/users/{id})
-        new Delete(uriTemplate: '/users/{id}'), // ✅ Supprimer un utilisateur (/api/users/{id})
+        new Get(),
+        new Post(),
+        new Get(uriTemplate: '/users/{id}'),
+        new Patch(uriTemplate: '/users/{id}'),
+        new Delete(uriTemplate: '/users/{id}'),
         new Get(
             uriTemplate: '/me',
             name: 'users_me',
-            provider: UserMeProvider::class, // ✅ Le Provider récupère l'utilisateur
+            provider: UserMeProvider::class, 
+            security: "is_granted('IS_AUTHENTICATED_FULLY')"
+        ),
+        new Patch(
+            uriTemplate: '/user/passchange',
+            name: 'users_change_password',
+            processor: UserPasswordChangeStateProcessor::class,
+            input: PasswordChangeDTO::class,
             security: "is_granted('IS_AUTHENTICATED_FULLY')"
         )
     ]

@@ -32,3 +32,8 @@ services:
         autowire: true
         autoconfigure: true
         public: true
+        
+    App\State\UserPasswordChangeStateProcessor:
+        autowire: true
+        autoconfigure: true
+        public: true        
