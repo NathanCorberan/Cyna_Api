@@ -2,56 +2,40 @@
 
 namespace App\Entity;
 
-use App\Repository\CategoryRepository;
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
-use Doctrine\ORM\Mapping as ORM;
-
 use ApiPlatform\Metadata\ApiResource;
-use ApiPlatform\Metadata\Get;
-use ApiPlatform\Metadata\Post;
-use ApiPlatform\Metadata\Patch;
-use ApiPlatform\Metadata\Delete;
-use ApiPlatform\Metadata\GetCollection;
+use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
+use Doctrine\Common\Collections\Collection;
+use Doctrine\Common\Collections\ArrayCollection;
 
-#[ORM\Entity(repositoryClass: CategoryRepository::class)]
-#[ORM\Table(name: '`category`', uniqueConstraints: [
-    new ORM\UniqueConstraint(name: "UNIQ_CATEGORY_ORDER", columns: ["category_order"]) 
-])]
+#[ORM\Entity]
 #[ApiResource(
-    normalizationContext: ['groups' => ['user:read']],
-    denormalizationContext: ['groups' => ['user:write']],
+    normalizationContext: ['groups' => ['category:read']],
+    denormalizationContext: ['groups' => ['category:write']],
 )]
 class Category
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['user:read', 'user:write'])]
+    #[Groups(['category:read', 'category:write'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 50)]
-    #[Groups(['user:read', 'user:write','category_image:read'])]
+    #[Groups(['category:read', 'category:write'])]
     private ?string $name = null;
 
     #[ORM\Column(length: 50)]
-    #[Groups(['user:read', 'user:write'])]
+    #[Groups(['category:read', 'category:write'])]
     private ?string $creation_date = null;
 
     #[ORM\Column]
-    #[Groups(['user:read', 'user:write'])]
+    #[Groups(['category:read', 'category:write'])]
     private ?int $category_order = null;
 
-    /**
-     * @var Collection<int, CategoryImage>
-     */
     #[ORM\OneToMany(targetEntity: CategoryImage::class, mappedBy: 'category')]
     private Collection $categoryImages;
 
-    /**
-     * @var Collection<int, Product>
-     */
     #[ORM\OneToMany(targetEntity: Product::class, mappedBy: 'category')]
     private Collection $products;
 
@@ -74,7 +58,6 @@ class Category
     public function setName(string $name): static
     {
         $this->name = $name;
-
         return $this;
     }
 
@@ -86,7 +69,6 @@ class Category
     public function setCreationDate(string $creation_date): static
     {
         $this->creation_date = $creation_date;
-
         return $this;
     }
 
@@ -98,7 +80,6 @@ class Category
     public function setCategoryOrder(int $category_order): static
     {
         $this->category_order = $category_order;
-
         return $this;
     }
 
@@ -123,7 +104,6 @@ class Category
     public function removeCategoryImage(CategoryImage $categoryImage): static
     {
         if ($this->categoryImages->removeElement($categoryImage)) {
-            // set the owning side to null (unless already changed)
             if ($categoryImage->getCategory() === $this) {
                 $categoryImage->setCategory(null);
             }
@@ -153,12 +133,21 @@ class Category
     public function removeProduct(Product $product): static
     {
         if ($this->products->removeElement($product)) {
-            // set the owning side to null (unless already changed)
             if ($product->getCategory() === $this) {
                 $product->setCategory(null);
             }
         }
 
         return $this;
+    }
+
+    // ✅ Retourne l'image principale de la catégorie
+    #[Groups(['category:read'])]
+    public function getImageLink(): ?string
+    {
+        foreach ($this->categoryImages as $image) {
+            return $image->getImageLink(); // Retourne l'URL de la première image trouvée
+        }
+        return null;
     }
 }

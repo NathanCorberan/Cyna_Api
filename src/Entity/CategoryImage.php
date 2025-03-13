@@ -28,7 +28,7 @@ class CategoryImage
     private ?string $name = null;
 
     #[ORM\Column(type: Types::TEXT)]
-    #[Groups(['category_image:read', 'category_image:write'])]
+    #[Groups(['category_image:read', 'category_image:write', 'category:read',])]
     private ?string $image_link = null;
 
     #[ORM\ManyToOne(inversedBy: 'categoryImages')]
