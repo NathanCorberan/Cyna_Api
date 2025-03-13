@@ -24,15 +24,15 @@ class CategoryImageDataPersister implements ProcessorInterface
             throw new \InvalidArgumentException('Invalid data type');
         }
 
-        // Récupération du nom de la catégorie depuis la requête
-        $categoryName = $data->getCategoryName();
+        // Récupération de l'ID de la catégorie depuis la requête
+        $categoryId = $data->getCategoryId();
 
-        if ($categoryName) {
+        if ($categoryId) {
             // Recherche de la catégorie en base de données
-            $category = $this->entityManager->getRepository(Category::class)->findOneBy(['name' => $categoryName]);
+            $category = $this->entityManager->getRepository(Category::class)->find($categoryId);
 
             if (!$category) {
-                throw new NotFoundHttpException("Category '$categoryName' not found.");
+                throw new NotFoundHttpException("Category with ID '$categoryId' not found.");
             }
 
             // Attribution de la catégorie trouvée

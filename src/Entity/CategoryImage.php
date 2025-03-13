@@ -2,14 +2,13 @@
 
 namespace App\Entity;
 
-use App\Repository\CategoryImageRepository;
-use Doctrine\DBAL\Types\Types;
-use Doctrine\ORM\Mapping as ORM;
 use ApiPlatform\Metadata\ApiResource;
+use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
 use App\State\CategoryImageDataPersister;
+use Doctrine\DBAL\Types\Types;
 
-#[ORM\Entity(repositoryClass: CategoryImageRepository::class)]
+#[ORM\Entity]
 #[ApiResource(
     normalizationContext: ['groups' => ['category_image:read']],
     denormalizationContext: ['groups' => ['category_image:write']],
@@ -28,7 +27,7 @@ class CategoryImage
     private ?string $name = null;
 
     #[ORM\Column(type: Types::TEXT)]
-    #[Groups(['category_image:read', 'category_image:write', 'category:read',])]
+    #[Groups(['category_image:read', 'category_image:write'])]
     private ?string $image_link = null;
 
     #[ORM\ManyToOne(inversedBy: 'categoryImages')]
@@ -36,8 +35,9 @@ class CategoryImage
     #[Groups(['category_image:read'])]
     private ?Category $category = null;
 
+    // 🆕 Champ temporaire pour recevoir l'ID de la catégorie
     #[Groups(['category_image:write'])]
-    private ?string $category_name = null;
+    private ?int $category_id = null;
 
     public function getId(): ?int
     {
@@ -77,14 +77,14 @@ class CategoryImage
         return $this;
     }
 
-    public function getCategoryName(): ?string
+    public function getCategoryId(): ?int
     {
-        return $this->category_name;
+        return $this->category_id;
     }
 
-    public function setCategoryName(?string $category_name): static
+    public function setCategoryId(?int $category_id): static
     {
-        $this->category_name = $category_name;
+        $this->category_id = $category_id;
         return $this;
     }
 }
