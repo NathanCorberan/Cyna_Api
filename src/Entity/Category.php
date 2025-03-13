@@ -7,11 +7,13 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\ArrayCollection;
+use App\Repository\CategoryRepository;
 
-#[ORM\Entity]
+#[ORM\Entity(repositoryClass: CategoryRepository::class)]
 #[ApiResource(
     normalizationContext: ['groups' => ['category:read']],
     denormalizationContext: ['groups' => ['category:write']],
+    order: ['category_order' => 'ASC'] 
 )]
 class Category
 {
@@ -146,7 +148,7 @@ class Category
     public function getImageLink(): ?string
     {
         foreach ($this->categoryImages as $image) {
-            return $image->getImageLink(); // Retourne l'URL de la première image trouvée
+            return $image->getImageLink();
         }
         return null;
     }

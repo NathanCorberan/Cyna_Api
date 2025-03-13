@@ -4,7 +4,7 @@ services:
     _defaults:
         autowire: true
         autoconfigure: true
-        public: true # ✅ Assure que le service est accessible publiquement
+        public: true 
 
     App\:
         resource: '../src/'
@@ -12,7 +12,7 @@ services:
             - '../src/DependencyInjection/'
             - '../src/Entity/'
             - '../src/Kernel.php'
-            
+
     App\State\UserMeProvider:
         autowire: true
         autoconfigure: true
