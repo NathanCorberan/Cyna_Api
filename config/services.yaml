@@ -22,3 +22,13 @@ services:
         autowire: true
         autoconfigure: true
         public: true
+    
+    App\State\ProductDataPersister:
+        autowire: true
+        autoconfigure: true
+        public: true
+
+    App\State\ProductStateProvider:
+        autowire: true
+        autoconfigure: true
+        public: true

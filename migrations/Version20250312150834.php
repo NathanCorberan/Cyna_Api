@@ -48,6 +48,8 @@ final class Version20250312150834 extends AbstractMigration
         $this->addSql('ALTER TABLE subscription ADD CONSTRAINT FK_A3C664D3B6596C08 FOREIGN KEY (subscription_type_id) REFERENCES subscription_type (id)');
         $this->addSql('ALTER TABLE subscription_type ADD CONSTRAINT FK_BBE247374584665A FOREIGN KEY (product_id) REFERENCES product (id)');
         $this->addSql('ALTER TABLE user_address ADD CONSTRAINT FK_5543718BA76ED395 FOREIGN KEY (user_id) REFERENCES user (id)');
+        $this->addSql("ALTER TABLE product MODIFY status ENUM('Disponible', 'Indisponible') NOT NULL");
+
     }
 
     public function down(Schema $schema): void

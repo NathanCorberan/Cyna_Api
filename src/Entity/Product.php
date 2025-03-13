@@ -6,52 +6,81 @@ use App\Repository\ProductRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+
 use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\Patch;
+use ApiPlatform\Metadata\Delete;
+use ApiPlatform\Metadata\GetCollection;
+use Symfony\Component\Serializer\Annotation\Groups;
+
+use Symfony\Component\Validator\Constraints as Assert;
+use App\State\ProductDataPersister;
+use App\State\ProductStateProvider;
 
 #[ORM\Entity(repositoryClass: ProductRepository::class)]
-#[ApiResource]  // Ajoute cette annotation pour exposer l'entité dans l'API
+#[ApiResource(
+    normalizationContext: ['groups' => ['Product:read']],
+    denormalizationContext: ['groups' => ['Product:write']],
+    processor: ProductDataPersister::class,
+    provider: ProductStateProvider::class
+)]
 class Product
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['Product:read'])]
     private ?int $id = null;
 
     #[ORM\Column(nullable: true)]
+    #[Groups(['Product:read', 'Product:write'])]
     private ?int $available_stock = null;
 
     #[ORM\Column(length: 50)]
+    #[Groups(['Product:read', 'Product:write'])]
     private ?string $creation_date = null;
 
     #[ORM\Column(length: 50)]
+    #[Assert\Choice(choices: ["Disponible", "Indisponible"], message: "Le statut doit être 'Disponible' ou 'Indisponible'.")]
+    #[Groups(['Product:read', 'Product:write'])]
     private ?string $status = null;
+
+    #[Groups(['Product:write'])]
+    private ?int $category_id = null;
 
     #[ORM\ManyToOne(inversedBy: 'products')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(['Product:read'])]
     private ?Category $category = null;
 
     /**
      * @var Collection<int, ProductLangage>
      */
     #[ORM\OneToMany(targetEntity: ProductLangage::class, mappedBy: 'product')]
+    #[Groups(['Product:read'])]
     private Collection $productLangages;
 
     /**
      * @var Collection<int, ProductImage>
      */
     #[ORM\OneToMany(targetEntity: ProductImage::class, mappedBy: 'product')]
+    #[Groups(['Product:read'])]
     private Collection $productImages;
 
     /**
      * @var Collection<int, Order>
      */
     #[ORM\ManyToMany(targetEntity: Order::class, mappedBy: 'products')]
+    #[Groups(['Product:read'])]
     private Collection $orders;
 
     /**
      * @var Collection<int, SubscriptionType>
      */
     #[ORM\OneToMany(targetEntity: SubscriptionType::class, mappedBy: 'product')]
+    #[Groups(['Product:read'])]
     private Collection $subscriptionTypes;
 
     public function __construct()
@@ -112,6 +141,17 @@ class Product
     {
         $this->category = $category;
 
+        return $this;
+    }
+
+    public function getCategoryId(): ?int
+    {
+        return $this->category_id;
+    }
+
+    public function setCategoryId(?int $category_id): static
+    {
+        $this->category_id = $category_id;
         return $this;
     }
 
