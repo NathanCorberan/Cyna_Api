@@ -13,9 +13,13 @@ use ApiPlatform\Metadata\Patch;
 use ApiPlatform\Metadata\Delete;
 use ApiPlatform\Metadata\GetCollection;
 use Symfony\Component\Serializer\Annotation\Groups;
+use App\State\ProductLangageDataPersister;
 
 #[ORM\Entity(repositoryClass: ProductLangageRepository::class)]
-#[ApiResource(    
+#[ApiResource(
+    normalizationContext: ['groups' => ['ProductLangage:read']],
+    denormalizationContext: ['groups' => ['ProductLangage:write']],
+    processor: ProductLangageDataPersister::class,
     security: "is_granted('ROLE_ADMIN')",
 )]  // Ajoute cette annotation pour exposer l'entité dans l'API
 class ProductLangage
@@ -23,20 +27,28 @@ class ProductLangage
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['ProductLangage:read'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 2)]
+    #[Groups(['ProductLangage:write','ProductLangage:read'])]
     private ?string $code = null;
 
     #[ORM\Column(length: 50)]
+    #[Groups(['ProductLangage:write','ProductLangage:read'])]
     private ?string $name = null;
 
     #[ORM\Column(type: Types::TEXT)]
+    #[Groups(['ProductLangage:write','ProductLangage:read'])]
     private ?string $description = null;
 
     #[ORM\ManyToOne(inversedBy: 'productLangages')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(['ProductLangage:read'])]
     private ?Product $product = null;
+
+    #[Groups(['ProductLangage:write','ProductLangage:read'])]
+    private ?int $product_id = null;
 
     public function getId(): ?int
     {
@@ -88,6 +100,17 @@ class ProductLangage
     {
         $this->product = $product;
 
+        return $this;
+    }
+
+    public function getProductId(): ?int
+    {
+        return $this->product_id;
+    }
+
+    public function setProductId(?int $product_id): static // ✅ Correction du setter (avant `setProducId`)
+    {
+        $this->product_id = $product_id;
         return $this;
     }
 }
