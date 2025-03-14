@@ -7,4 +7,9 @@ nelmio_cors:
         expose_headers: ['Link']
         max_age: 3600
     paths:
+        '^/api/': # Applique CORS à toutes les routes qui commencent par /api/
+            allow_origin: ['http://cyna.juku7704.odns.fr/']
+            allow_methods: ['GET', 'OPTIONS', 'POST', 'PUT', 'DELETE']
+            allow_headers: ['Content-Type', 'Authorization']
+            max_age: 3600
         '^/': null
