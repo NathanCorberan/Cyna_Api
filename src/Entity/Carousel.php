@@ -21,16 +21,16 @@ use Symfony\Component\Serializer\Annotation\Groups;
 #[ApiResource(
     normalizationContext: ['groups' => ['carousel:read']],
     denormalizationContext: ['groups' => ['carousel:write']],
-    order: ['panel_order' => 'ASC'], // ✅ Ajout du tri sur `panel_order`
+    order: ['panel_order' => 'ASC'],
     operations: [
-        new GetCollection(), // ✅ Tout le monde peut voir les carousels
-        new Get(security: "is_granted('ROLE_ADMIN')"), // ✅ Tout le monde peut voir un carousel
-        new Post(security: "is_granted('ROLE_ADMIN')"), // 🔒 Seulement les admins peuvent créer
-        new Patch(security: "is_granted('ROLE_ADMIN')"), // 🔒 Seulement les admins peuvent modifier
-        new Delete(security: "is_granted('ROLE_ADMIN')"), // 🔒 Seulement les admins peuvent supprimer
+        new GetCollection(),
+        new Get(security: "is_granted('ROLE_ADMIN')"), 
+        new Post(security: "is_granted('ROLE_ADMIN')"), 
+        new Patch(security: "is_granted('ROLE_ADMIN')"), 
+        new Delete(security: "is_granted('ROLE_ADMIN')"),
     ]
     
-)]  // Ajoute cette annotation pour exposer l'entité dans l'API
+)] 
 class Carousel
 {
     #[ORM\Id]
@@ -51,7 +51,7 @@ class Carousel
      * @var Collection<int, CarouselLangage>
      */
     #[ORM\OneToMany(targetEntity: CarouselLangage::class, mappedBy: 'carousel')]
-    #[Groups(['carousel:read'])] // ✅ Ajout de `carouselLangages` dans la réponse API
+    #[Groups(['carousel:read'])]
     private Collection $carouselLangages;
 
     public function __construct()
