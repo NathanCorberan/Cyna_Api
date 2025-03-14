@@ -38,8 +38,14 @@ use Symfony\Component\Serializer\Annotation\Groups;
             )
         ),
         new Get(),
-        new Post(),
-        new Get(uriTemplate: '/users/{id}'),
+        new Post(
+            security: "is_granted('PUBLIC_ACCESS')", // ✅ Accessible à tout le monde
+            openapi: new \ApiPlatform\OpenApi\Model\Operation(
+                summary: 'Créer un nouvel utilisateur (inscription ouverte à tout le monde)',
+                tags: ['User']
+            )
+        ),
+         new Get(uriTemplate: '/users/{id}'),
         new Patch(uriTemplate: '/users/{id}'),
         new Delete(uriTemplate: '/users/{id}'),
         new Get(

@@ -36,7 +36,7 @@ security:
 
         # ✅ Gestion des utilisateurs
         - { path: ^/api/users, methods: [GET], roles: ROLE_ADMIN }
-        - { path: ^/api/users, methods: [POST], roles: IS_AUTHENTICATED_ANONYMOUSLY }
+        - { path: ^/api/users, methods: [POST], roles: PUBLIC_ACCESS }
         - { path: ^/api/users/\d+$, methods: [GET], roles: ROLE_ADMIN }
         - { path: ^/api/users/\d+$, methods: [DELETE], roles: ROLE_ADMIN }
         - { path: ^/api/users/\d+$, methods: [PATCH], roles: ROLE_ADMIN }
