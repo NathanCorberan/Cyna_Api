@@ -1,15 +1,17 @@
 nelmio_cors:
     defaults:
         origin_regex: true
-        allow_origin: ['%env(CORS_ALLOW_ORIGIN)%']
+        allow_origin: ['http://cyna.juku7704.odns.fr'] # ✅ Enlever le `/` final
         allow_methods: ['GET', 'OPTIONS', 'POST', 'PUT', 'PATCH', 'DELETE']
         allow_headers: ['Content-Type', 'Authorization']
         expose_headers: ['Link']
         max_age: 3600
+        allow_credentials: true 
+
     paths:
-        '^/api/': # Applique CORS à toutes les routes qui commencent par /api/
-            allow_origin: ['http://cyna.juku7704.odns.fr/']
-            allow_methods: ['GET', 'OPTIONS', 'POST', 'PUT', 'DELETE']
+        '^/api/': 
+            allow_origin: ['http://cyna.juku7704.odns.fr']
+            allow_methods: ['GET', 'OPTIONS', 'POST', 'PUT', 'DELETE', 'PATCH']
             allow_headers: ['Content-Type', 'Authorization']
+            allow_credentials: true
             max_age: 3600
-        '^/': null
