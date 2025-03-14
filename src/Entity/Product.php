@@ -27,18 +27,20 @@ use App\State\ProductTopOrdersStateProvider;
     processor: ProductDataPersister::class,
     provider: ProductStateProvider::class,
     operations: [
-        new GetCollection(),
+        new GetCollection(security: "is_granted('PUBLIC_ACCESS')"),
         new Get(),
-        new Post(), 
+        new Post(security: "is_granted('ROLE_ADMIN')"), 
         new Get(uriTemplate: '/products/{id}'),
-        new Patch(uriTemplate: '/products/{id}'), 
-        new Delete(uriTemplate: '/products/{id}'),
+        new Patch(security: "is_granted('ROLE_ADMIN')", uriTemplate: '/products/{id}'), 
+        new Delete(security: "is_granted('ROLE_ADMIN')", uriTemplate: '/products/{id}'),
         new Get(
             uriTemplate: '/top/products',
             name: 'products_top',
             provider: ProductTopOrdersStateProvider::class,
+            security: "is_granted('PUBLIC_ACCESS')"
         )
-    ]
+        ],
+    security: "is_granted('ROLE_ADMIN')",
 )]
 class Product
 {

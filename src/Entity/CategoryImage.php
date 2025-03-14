@@ -2,17 +2,24 @@
 
 namespace App\Entity;
 
-use ApiPlatform\Metadata\ApiResource;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Serializer\Annotation\Groups;
 use App\State\CategoryImageDataPersister;
 use Doctrine\DBAL\Types\Types;
+
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\Patch;
+use ApiPlatform\Metadata\Delete;
+use ApiPlatform\Metadata\GetCollection;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity]
 #[ApiResource(
     normalizationContext: ['groups' => ['category_image:read']],
     denormalizationContext: ['groups' => ['category_image:write']],
-    processor: CategoryImageDataPersister::class
+    processor: CategoryImageDataPersister::class,
+    security: "is_granted('ROLE_ADMIN')",
 )]
 class CategoryImage
 {

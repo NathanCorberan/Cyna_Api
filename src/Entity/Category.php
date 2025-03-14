@@ -2,18 +2,31 @@
 
 namespace App\Entity;
 
-use ApiPlatform\Metadata\ApiResource;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Serializer\Annotation\Groups;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\ArrayCollection;
 use App\Repository\CategoryRepository;
+
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\Patch;
+use ApiPlatform\Metadata\Delete;
+use ApiPlatform\Metadata\GetCollection;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: CategoryRepository::class)]
 #[ApiResource(
     normalizationContext: ['groups' => ['category:read']],
     denormalizationContext: ['groups' => ['category:write']],
-    order: ['category_order' => 'ASC'] 
+    order: ['category_order' => 'ASC'],
+    operations: [
+        new GetCollection(), // ✅ Tout le monde peut voir les catégories
+        new Get(), // ✅ Tout le monde peut voir une catégorie
+        new Post(security: "is_granted('ROLE_ADMIN')"), // 🔒 Admin seulement
+        new Patch(security: "is_granted('ROLE_ADMIN')"), // 🔒 Admin seulement
+        new Delete(security: "is_granted('ROLE_ADMIN')"), // 🔒 Admin seulement
+    ]
 )]
 class Category
 {

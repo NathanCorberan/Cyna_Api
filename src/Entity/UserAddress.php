@@ -4,10 +4,19 @@ namespace App\Entity;
 
 use App\Repository\UserAddressRepository;
 use Doctrine\ORM\Mapping as ORM;
+
 use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\Patch;
+use ApiPlatform\Metadata\Delete;
+use ApiPlatform\Metadata\GetCollection;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: UserAddressRepository::class)]
-#[ApiResource]  // Ajoute cette annotation pour exposer l'entité dans l'API
+#[ApiResource(    
+    security: "is_granted('ROLE_ADMIN')",
+)]  // Ajoute cette annotation pour exposer l'entité dans l'API
 class UserAddress
 {
     #[ORM\Id]

@@ -9,6 +9,11 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\Patch;
+use ApiPlatform\Metadata\Delete;
+use ApiPlatform\Metadata\GetCollection;
 use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: CarouselRepository::class)]
@@ -16,6 +21,14 @@ use Symfony\Component\Serializer\Annotation\Groups;
 #[ApiResource(
     normalizationContext: ['groups' => ['user:read']],
     denormalizationContext: ['groups' => ['user:write']],
+    operations: [
+        new GetCollection(), // ✅ Tout le monde peut voir les carousels
+        new Get(security: "is_granted('ROLE_ADMIN')"), // ✅ Tout le monde peut voir un carousel
+        new Post(security: "is_granted('ROLE_ADMIN')"), // 🔒 Seulement les admins peuvent créer
+        new Patch(security: "is_granted('ROLE_ADMIN')"), // 🔒 Seulement les admins peuvent modifier
+        new Delete(security: "is_granted('ROLE_ADMIN')"), // 🔒 Seulement les admins peuvent supprimer
+    ]
+    
 )]  // Ajoute cette annotation pour exposer l'entité dans l'API
 class Carousel
 {
