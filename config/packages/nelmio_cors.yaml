@@ -10,7 +10,7 @@ nelmio_cors:
 
     paths:
         '^/api/': 
-            allow_origin: ['http://cyna.juku7704.odns.fr']
+            allow_origin: ['http://cyna.juku7704.odns.fr','^https?://(localhost|127\.0\.0\.1)(:[0-9]+)?$']
             allow_methods: ['GET', 'OPTIONS', 'POST', 'PUT', 'DELETE', 'PATCH']
             allow_headers: ['Content-Type', 'Authorization']
             allow_credentials: true
