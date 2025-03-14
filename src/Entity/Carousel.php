@@ -19,8 +19,9 @@ use Symfony\Component\Serializer\Annotation\Groups;
 #[ORM\Entity(repositoryClass: CarouselRepository::class)]
 #[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_PANEL_ORDER', fields: ['panel_order'])]
 #[ApiResource(
-    normalizationContext: ['groups' => ['user:read']],
-    denormalizationContext: ['groups' => ['user:write']],
+    normalizationContext: ['groups' => ['carousel:read']],
+    denormalizationContext: ['groups' => ['carousel:write']],
+    order: ['panel_order' => 'ASC'], // ✅ Ajout du tri sur `panel_order`
     operations: [
         new GetCollection(), // ✅ Tout le monde peut voir les carousels
         new Get(security: "is_granted('ROLE_ADMIN')"), // ✅ Tout le monde peut voir un carousel
@@ -35,21 +36,22 @@ class Carousel
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['user:read', 'user:write'])]
+    #[Groups(['carousel:read', 'carousel:write'])]
     private ?int $id = null;
 
     #[ORM\Column(type: Types::TEXT)]
-    #[Groups(['user:read', 'user:write'])]
+    #[Groups(['carousel:read', 'carousel:write'])]
     private ?string $image_link = null;
 
     #[ORM\Column(type: Types::SMALLINT)]
-    #[Groups(['user:read', 'user:write'])]
+    #[Groups(['carousel:read', 'carousel:write'])]
     private ?int $panel_order = null;
 
     /**
      * @var Collection<int, CarouselLangage>
      */
     #[ORM\OneToMany(targetEntity: CarouselLangage::class, mappedBy: 'carousel')]
+    #[Groups(['carousel:read'])] // ✅ Ajout de `carouselLangages` dans la réponse API
     private Collection $carouselLangages;
 
     public function __construct()
@@ -70,7 +72,6 @@ class Carousel
     public function setImageLink(string $image_link): static
     {
         $this->image_link = $image_link;
-
         return $this;
     }
 
@@ -82,7 +83,6 @@ class Carousel
     public function setPanelOrder(int $panel_order): static
     {
         $this->panel_order = $panel_order;
-
         return $this;
     }
 
@@ -107,7 +107,6 @@ class Carousel
     public function removeCarouselLangage(CarouselLangage $carouselLangage): static
     {
         if ($this->carouselLangages->removeElement($carouselLangage)) {
-            // set the owning side to null (unless already changed)
             if ($carouselLangage->getCarousel() === $this) {
                 $carouselLangage->setCarousel(null);
             }

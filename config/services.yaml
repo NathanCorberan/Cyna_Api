@@ -36,4 +36,9 @@ services:
     App\State\UserPasswordChangeStateProcessor:
         autowire: true
         autoconfigure: true
+        public: true
+
+    App\State\CarouselLangageDataPersister:
+        autowire: true
+        autoconfigure: true
         public: true        
