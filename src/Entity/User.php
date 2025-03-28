@@ -11,8 +11,10 @@ use Symfony\Component\Security\Core\User\UserInterface;
 use App\State\UserPasswordHasher;
 use App\State\UserMeProvider;
 use App\State\UserPasswordChangeStateProcessor;
+use App\State\UserUpdateProcessor;
 
 use App\Dto\PasswordChangeDTO;
+use App\Dto\UserUpdateDTO;
 
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Get;
@@ -30,7 +32,7 @@ use Symfony\Component\Serializer\Annotation\Groups;
     processor: UserPasswordHasher::class,
     security: "is_granted('ROLE_ADMIN') or object == user",
     operations: [
-        new GetCollection( // ✅ Permet aux admins de voir tous les utilisateurs
+        new GetCollection(
             security: "is_granted('ROLE_ADMIN')",
             openapi: new \ApiPlatform\OpenApi\Model\Operation(
                 summary: 'Récupère la liste des utilisateurs (admin uniquement)',
@@ -39,7 +41,7 @@ use Symfony\Component\Serializer\Annotation\Groups;
         ),
         new Get(),
         new Post(
-            security: "is_granted('PUBLIC_ACCESS')", // ✅ Accessible à tout le monde
+            security: "is_granted('IS_AUTHENTICATED_ANONYMOUSLY')",
             openapi: new \ApiPlatform\OpenApi\Model\Operation(
                 summary: 'Créer un nouvel utilisateur (inscription ouverte à tout le monde)',
                 tags: ['User']
@@ -60,7 +62,19 @@ use Symfony\Component\Serializer\Annotation\Groups;
             processor: UserPasswordChangeStateProcessor::class,
             input: PasswordChangeDTO::class,
             security: "is_granted('IS_AUTHENTICATED_FULLY')"
-        )
+        ),
+        new Patch(
+            uriTemplate: '/me/update',
+            input: UserUpdateDTO::class,
+            processor: UserUpdateProcessor::class,
+            normalizationContext: ['groups' => ['user:read']],
+            denormalizationContext: ['groups' => ['user:update']],
+            security: "is_granted('IS_AUTHENTICATED_FULLY')",
+            openapi: new \ApiPlatform\OpenApi\Model\Operation(
+                summary: 'Met à jour les infos (nom/prénom) de l’utilisateur connecté',
+                tags: ['User']
+            )
+        ),
     ]
 )]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
