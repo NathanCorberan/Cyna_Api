@@ -24,24 +24,22 @@ use App\State\ProductTopOrdersStateProvider;
 #[ApiResource(
     normalizationContext: ['groups' => ['Product:read']],
     denormalizationContext: ['groups' => ['Product:write']],
-    processor: ProductDataPersister::class,
-    provider: ProductStateProvider::class,
     operations: [
-        new GetCollection(security: "is_granted('PUBLIC_ACCESS')"),
-        new Get(),
-        new Post(security: "is_granted('ROLE_ADMIN')"), 
-        new Get(uriTemplate: '/products/{id}'),
-        new Patch(security: "is_granted('ROLE_ADMIN')", uriTemplate: '/products/{id}'), 
-        new Delete(security: "is_granted('ROLE_ADMIN')", uriTemplate: '/products/{id}'),
+        new GetCollection(security: "is_granted('PUBLIC_ACCESS')", provider: ProductStateProvider::class),
+        new Get(provider: ProductStateProvider::class),
+        new Post(security: "is_granted('ROLE_ADMIN')"),
+        new Patch(security: "is_granted('ROLE_ADMIN')", uriTemplate: '/products/{id}'),
+        new Delete(security: "is_granted('ROLE_ADMIN')", uriTemplate: '/products/{id}'), # ⛔️ PAS de processor ici
         new Get(
             uriTemplate: '/top/products',
             name: 'products_top',
             provider: ProductTopOrdersStateProvider::class,
             security: "is_granted('PUBLIC_ACCESS')"
         )
-        ],
-    security: "is_granted('ROLE_ADMIN')",
+    ],
+    security: "is_granted('ROLE_ADMIN')"
 )]
+
 class Product
 {
     #[ORM\Id]
@@ -86,25 +84,24 @@ class Product
     private Collection $productImages;
 
     /**
-     * @var Collection<int, Order>
-     */
-    #[ORM\ManyToMany(targetEntity: Order::class, mappedBy: 'products')]
-    #[Groups(['Product:read'])]
-    private Collection $orders;
-
-    /**
      * @var Collection<int, SubscriptionType>
      */
     #[ORM\OneToMany(targetEntity: SubscriptionType::class, mappedBy: 'product')]
     #[Groups(['Product:read'])]
     private Collection $subscriptionTypes;
 
+    /**
+     * @var Collection<int, OrderItem>
+     */
+    #[ORM\OneToMany(targetEntity: OrderItem::class, mappedBy: 'product')]
+    private Collection $orderItems;
+
     public function __construct()
     {
         $this->productLangages = new ArrayCollection();
         $this->productImages = new ArrayCollection();
-        $this->orders = new ArrayCollection();
         $this->subscriptionTypes = new ArrayCollection();
+        $this->orderItems = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -192,7 +189,6 @@ class Product
     public function removeProductLangage(ProductLangage $productLangage): static
     {
         if ($this->productLangages->removeElement($productLangage)) {
-            // set the owning side to null (unless already changed)
             if ($productLangage->getProduct() === $this) {
                 $productLangage->setProduct(null);
             }
@@ -222,37 +218,9 @@ class Product
     public function removeProductImage(ProductImage $productImage): static
     {
         if ($this->productImages->removeElement($productImage)) {
-            // set the owning side to null (unless already changed)
             if ($productImage->getProduct() === $this) {
                 $productImage->setProduct(null);
             }
-        }
-
-        return $this;
-    }
-
-    /**
-     * @return Collection<int, Order>
-     */
-    public function getOrders(): Collection
-    {
-        return $this->orders;
-    }
-
-    public function addOrder(Order $order): static
-    {
-        if (!$this->orders->contains($order)) {
-            $this->orders->add($order);
-            $order->addProduct($this);
-        }
-
-        return $this;
-    }
-
-    public function removeOrder(Order $order): static
-    {
-        if ($this->orders->removeElement($order)) {
-            $order->removeProduct($this);
         }
 
         return $this;
@@ -279,9 +247,37 @@ class Product
     public function removeSubscriptionType(SubscriptionType $subscriptionType): static
     {
         if ($this->subscriptionTypes->removeElement($subscriptionType)) {
-            // set the owning side to null (unless already changed)
             if ($subscriptionType->getProduct() === $this) {
                 $subscriptionType->setProduct(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, OrderItem>
+     */
+    public function getOrderItems(): Collection
+    {
+        return $this->orderItems;
+    }
+
+    public function addOrderItem(OrderItem $orderItem): static
+    {
+        if (!$this->orderItems->contains($orderItem)) {
+            $this->orderItems->add($orderItem);
+            $orderItem->setProduct($this);
+        }
+
+        return $this;
+    }
+
+    public function removeOrderItem(OrderItem $orderItem): static
+    {
+        if ($this->orderItems->removeElement($orderItem)) {
+            if ($orderItem->getProduct() === $this) {
+                $orderItem->setProduct(null);
             }
         }
 

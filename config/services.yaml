@@ -27,6 +27,13 @@ services:
         autowire: true
         autoconfigure: true
         public: true
+        decorates: 'api_platform.doctrine.orm.state.persist_processor'
+        arguments:
+            $entityManager: '@doctrine.orm.entity_manager'
+            $decoratedProcessor: '@App\State\ProductDataPersister.inner'
+
+
+
 
     App\State\ProductStateProvider:
         autowire: true
@@ -41,4 +48,20 @@ services:
     App\State\CarouselLangageDataPersister:
         autowire: true
         autoconfigure: true
-        public: true        
+        public: true
+
+    App\State\OrderItemDataPersister:
+        arguments:
+            $entityManager: '@doctrine.orm.entity_manager'
+
+    App\State\OrderDataPersister:
+        decorates: 'api_platform.doctrine.orm.state.persist_processor'
+        arguments:
+            $entityManager: '@doctrine.orm.entity_manager'
+            $decoratedProcessor: '@App\State\OrderDataPersister.inner'
+        autoconfigure: true
+        autowire: true
+        
+    App\State\SecureOrderItemDeletionProcessor: ~
+
+

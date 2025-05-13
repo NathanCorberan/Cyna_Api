@@ -89,10 +89,17 @@ security:
 
         # ✅ Gestion des commandes (orders)
         - { path: ^/api/orders, methods: [GET], roles: ROLE_ADMIN }
-        - { path: ^/api/orders, methods: [POST], roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/orders, methods: [POST], roles: PUBLIC_ACCESS }
         - { path: ^/api/orders/\d+$, methods: [GET], roles: ROLE_ADMIN }
         - { path: ^/api/orders/\d+$, methods: [DELETE], roles: ROLE_ADMIN }
         - { path: ^/api/orders/\d+$, methods: [PATCH], roles: ROLE_ADMIN }
+
+        # ✅ Gestion des commandes (ordersItems)
+        - { path: ^/api/order_items, methods: [GET], roles: PUBLIC_ACCESS }
+        - { path: ^/api/order_items, methods: [POST], roles: PUBLIC_ACCESS }
+        - { path: ^/api/order_items/\d+$, methods: [GET], roles: PUBLIC_ACCESS }
+        - { path: ^/api/order_items/\d+$, methods: [DELETE], roles: PUBLIC_ACCESS }
+        - { path: ^/api/order_items/\d+$, methods: [PATCH], roles: PUBLIC_ACCESS }
 
         # ✅ Gestion des langues pour la homepage
         - { path: ^/api/homepage_langages, methods: [GET], roles: ROLE_ADMIN }

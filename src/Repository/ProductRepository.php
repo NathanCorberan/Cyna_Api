@@ -35,7 +35,7 @@ class ProductRepository extends ServiceEntityRepository
      * Retourne les 3 produits les plus commandés
      * @return Product[]
      */
-    public function findTopOrderedProducts(): array
+    public function findTopOrderedProductsObselete(): array
     {
         return $this->createQueryBuilder('p')
             ->leftJoin('p.orders', 'o') 
@@ -44,5 +44,16 @@ class ProductRepository extends ServiceEntityRepository
             ->setMaxResults(3) 
             ->getQuery()
             ->getResult();
+    }
+
+    public function findTopOrderedProducts(): array
+    {
+        return $this->createQueryBuilder('p')
+            ->join('p.orderItems', 'oi')
+            ->groupBy('p.id')
+            ->orderBy('SUM(oi.quantity)', 'DESC')
+            ->setMaxResults(10)
+            ->getQuery()
+            ->getResult(); // ✅ retourne directement des objets Product
     }
 }
