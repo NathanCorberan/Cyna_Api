@@ -64,4 +64,10 @@ services:
         
     App\State\SecureOrderItemDeletionProcessor: ~
 
+    App\State\CategoryProductsProvider:
+        arguments:
+            $productRepository: '@App\Repository\ProductRepository'
+
+    
+
 

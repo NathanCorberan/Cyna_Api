@@ -16,7 +16,7 @@ use Symfony\Component\Serializer\Annotation\Groups;
 #[ORM\Entity(repositoryClass: SubscriptionRepository::class)]
 #[ApiResource(    
     security: "is_granted('ROLE_ADMIN')",
-)]  // Ajoute cette annotation pour exposer l'entité dans l'API
+)]
 class Subscription
 {
     #[ORM\Id]

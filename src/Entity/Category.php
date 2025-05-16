@@ -15,17 +15,32 @@ use ApiPlatform\Metadata\Delete;
 use ApiPlatform\Metadata\GetCollection;
 use Symfony\Component\Serializer\Annotation\Groups;
 
+use App\Entity\Product;
+use App\State\CategoryProductsProvider;
+
+
 #[ORM\Entity(repositoryClass: CategoryRepository::class)]
 #[ApiResource(
     normalizationContext: ['groups' => ['category:read']],
     denormalizationContext: ['groups' => ['category:write']],
     order: ['category_order' => 'ASC'],
     operations: [
-        new GetCollection(), // ✅ Tout le monde peut voir les catégories
-        new Get(), // ✅ Tout le monde peut voir une catégorie
+        new GetCollection(),
+        new Get(),
         new Post(security: "is_granted('ROLE_ADMIN')"), // 🔒 Admin seulement
         new Patch(security: "is_granted('ROLE_ADMIN')"), // 🔒 Admin seulement
         new Delete(security: "is_granted('ROLE_ADMIN')"), // 🔒 Admin seulement
+        new GetCollection(
+            uriTemplate: '/categorie/{id}/products',
+            name: 'get_category_products',
+            provider: CategoryProductsProvider::class,
+            status: 200,
+            output: Product::class,
+            normalizationContext: ['groups' => ['Product:read']] // ← MAJUSCULE ici !
+        )
+
+
+
     ]
 )]
 class Category
