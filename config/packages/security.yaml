@@ -2,15 +2,18 @@ security:
     password_hashers:
         Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface:
             algorithm: bcrypt
+
     providers:
         app_user_provider:
             entity:
                 class: App\Entity\User
                 property: email
+
     firewalls:
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
+
         login:
             pattern: ^/api/login
             stateless: true
@@ -20,6 +23,9 @@ security:
                 password_path: password
                 success_handler: lexik_jwt_authentication.handler.authentication_success
                 failure_handler: lexik_jwt_authentication.handler.authentication_failure
+
+        
+
         api:
             pattern: ^/api
             stateless: true
@@ -37,7 +43,7 @@ security:
 
         # ✅ Gestion des utilisateurs
         - { path: ^/api/users, methods: [GET], roles: ROLE_ADMIN }
-        - { path: ^/api/users, methods: [POST], roles: IS_AUTHENTICATED_ANONYMOUSLY }
+        - { path: ^/api/users, methods: [POST], roles: PUBLIC_ACCESS }
         - { path: ^/api/users/\d+$, methods: [GET], roles: ROLE_ADMIN }
         - { path: ^/api/users/\d+$, methods: [DELETE], roles: ROLE_ADMIN }
         - { path: ^/api/users/\d+$, methods: [PATCH], roles: ROLE_ADMIN }

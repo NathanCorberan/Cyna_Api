@@ -41,12 +41,13 @@ use Symfony\Component\Serializer\Annotation\Groups;
         ),
         new Get(),
         new Post(
-            security: "is_granted('IS_AUTHENTICATED_ANONYMOUSLY')",
+            security: "is_granted('PUBLIC_ACCESS')",
             openapi: new \ApiPlatform\OpenApi\Model\Operation(
                 summary: 'Créer un nouvel utilisateur (inscription ouverte à tout le monde)',
                 tags: ['User']
             )
         ),
+
          new Get(uriTemplate: '/users/{id}'),
         new Patch(uriTemplate: '/users/{id}'),
         new Delete(uriTemplate: '/users/{id}'),
