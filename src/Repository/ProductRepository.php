@@ -49,11 +49,15 @@ class ProductRepository extends ServiceEntityRepository
     public function findTopOrderedProducts(): array
     {
         return $this->createQueryBuilder('p')
+            ->select('p, SUM(oi.quantity) AS HIDDEN totalQuantity')
             ->join('p.orderItems', 'oi')
+            ->join('oi.order', 'o')
+            ->where('o.status = :status')
+            ->setParameter('status', 'payed')
             ->groupBy('p.id')
-            ->orderBy('SUM(oi.quantity)', 'DESC')
+            ->orderBy('totalQuantity', 'DESC')
             ->setMaxResults(10)
             ->getQuery()
-            ->getResult(); // ✅ retourne directement des objets Product
+            ->getResult();
     }
 }

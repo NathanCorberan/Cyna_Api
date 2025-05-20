@@ -33,6 +33,7 @@ use App\State\OrderItemPatchState;
             output: OrderItem::class,
             processor: OrderItemDataPersister::class,
             security: "is_granted('PUBLIC_ACCESS')"
+            
         ),
         new Patch(
             input: OrderItemPatchInput::class,
