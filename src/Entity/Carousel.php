@@ -24,7 +24,7 @@ use Symfony\Component\Serializer\Annotation\Groups;
     order: ['panel_order' => 'ASC'],
     operations: [
         new GetCollection(),
-        new Get(security: "is_granted('ROLE_ADMIN')"), 
+        new Get(security: "is_granted('PUBLIC_ACCESS')"), 
         new Post(security: "is_granted('ROLE_ADMIN')"), 
         new Patch(security: "is_granted('ROLE_ADMIN')"), 
         new Delete(security: "is_granted('ROLE_ADMIN')"),
