@@ -47,6 +47,7 @@ class OrderItemDataPersister implements ProcessorInterface
         $cartInput = new CreateCartInput();
         $cartInput->key = $cartToken;
 
+        /** @var \App\Entity\Order $cart */
         $cart = $this->createCartProcessor->process($cartInput, $operation, $uriVariables, $context);
 
         $subscriptionType = $this->subscriptionTypeRepository->findOneBy(['product' => $product]);
@@ -54,7 +55,6 @@ class OrderItemDataPersister implements ProcessorInterface
             throw new NotFoundHttpException("No subscription type found for product ID {$data->product_id}.");
         }
 
-        // ✅ FUSION : si un OrderItem existe déjà pour ce produit, on cumule les quantités
         $existingItem = $this->orderItemRepository->findOneBy([
             'order' => $cart,
             'product' => $product
@@ -67,11 +67,13 @@ class OrderItemDataPersister implements ProcessorInterface
                 $existingItem->setUnitPrice($subscriptionType->getPrice());
             }
 
+            $cart->recalculateTotalAmount();
             $this->entityManager->flush();
+
             return $existingItem;
         }
 
-        // Sinon création normale
+        // 👉 Nouveau OrderItem
         $orderItem = new OrderItem();
         $orderItem->setOrder($cart);
         $orderItem->setProduct($product);
@@ -79,8 +81,16 @@ class OrderItemDataPersister implements ProcessorInterface
         $orderItem->setQuantity($data->quantity);
 
         $this->entityManager->persist($orderItem);
+
+        // ✅ On ajoute manuellement l’item dans la collection (pour que le total soit juste)
+        $cart->addOrderItem($orderItem);
+
+        // ✅ Maintenant, recalcul fonctionne correctement
+        $cart->recalculateTotalAmount();
+
         $this->entityManager->flush();
 
         return $orderItem;
     }
+
 }
