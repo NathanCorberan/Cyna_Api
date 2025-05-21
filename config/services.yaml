@@ -68,6 +68,9 @@ services:
         arguments:
             $productRepository: '@App\Repository\ProductRepository'
 
-    
+    App\Security\CustomJWTSuccessHandler:
+        tags:
+            - { name: kernel.event_subscriber }
+
 
 
