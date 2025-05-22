@@ -17,8 +17,8 @@ use ApiPlatform\Metadata\Delete;
 use ApiPlatform\Metadata\GetCollection;
 use Symfony\Component\Validator\Constraints as Assert;
 use App\State\OrderDataPersister;
-use App\Dto\CreateCartInput;
-use App\State\CreateCartState;
+use App\Dto\Cart\CreateCartInputDto;
+use App\Application\State\Cart\CreateCartProcessor;
 use App\State\CheckoutState;
 
 #[ORM\Entity(repositoryClass: OrderRepository::class)]
@@ -31,7 +31,7 @@ use App\State\CheckoutState;
         new Get(),
         new Post(
             uriTemplate: '/orders',
-            input: CreateCartInput::class,
+            input: CreateCartInputDto::class,
             output: Order::class,
             processor: CreateCartProcessor::class,
             security: "is_granted('PUBLIC_ACCESS')"

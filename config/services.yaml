@@ -4,73 +4,65 @@ services:
     _defaults:
         autowire: true
         autoconfigure: true
-        public: true 
+        public: true
 
     App\:
         resource: '../src/'
         exclude:
             - '../src/DependencyInjection/'
-            - '../src/Entity/'
+            - '../src/Domain/Entity/'
             - '../src/Kernel.php'
 
-    App\State\UserMeProvider:
-        autowire: true
-        autoconfigure: true
-        public: true
+    # === User ===
+    App\Application\State\User\UserMeProvider: ~
+    App\Application\State\User\UserPasswordChangeProcessor: ~
+    App\Application\State\User\UserUpdateProcessor: ~
+    App\Application\State\User\UserPasswordHasher: ~
 
-    App\State\CategoryImageDataPersister:
-        autowire: true
-        autoconfigure: true
-        public: true
-    
-    App\State\ProductDataPersister:
-        autowire: true
-        autoconfigure: true
-        public: true
-        decorates: 'api_platform.doctrine.orm.state.persist_processor'
-        arguments:
-            $entityManager: '@doctrine.orm.entity_manager'
-            $decoratedProcessor: '@App\State\ProductDataPersister.inner'
-
-
-
-
-    App\State\ProductStateProvider:
-        autowire: true
-        autoconfigure: true
-        public: true
-        
-    App\State\UserPasswordChangeStateProcessor:
-        autowire: true
-        autoconfigure: true
-        public: true
-
-    App\State\CarouselLangageDataPersister:
-        autowire: true
-        autoconfigure: true
-        public: true
-
-    App\State\OrderItemDataPersister:
-        arguments:
-            $entityManager: '@doctrine.orm.entity_manager'
-
-    App\State\OrderDataPersister:
-        decorates: 'api_platform.doctrine.orm.state.persist_processor'
-        arguments:
-            $entityManager: '@doctrine.orm.entity_manager'
-            $decoratedProcessor: '@App\State\OrderDataPersister.inner'
-        autoconfigure: true
-        autowire: true
-        
-    App\State\SecureOrderItemDeletionProcessor: ~
-
-    App\State\CategoryProductsProvider:
+    # === Category ===
+    App\Application\State\Category\CategoryImageDataPersister: ~
+    App\Application\State\Category\CategoryProductsProvider:
         arguments:
             $productRepository: '@App\Repository\ProductRepository'
 
-    App\Security\CustomJWTSuccessHandler:
+    # === Product ===
+    App\Application\State\Product\ProductDataPersister:
+        decorates: 'api_platform.doctrine.orm.state.persist_processor'
+        arguments:
+            $entityManager: '@doctrine.orm.entity_manager'
+            $decoratedProcessor: '@App\Application\State\Product\ProductDataPersister.inner'
+
+    App\Application\State\Product\ProductProvider: ~
+    App\Application\State\Product\ProductImageDataPersister: ~
+    App\Application\State\Product\ProductLangageDataPersister: ~
+    App\Application\State\Product\TopOrdersProductProvider: ~
+
+    # === Carousel ===
+    App\Application\State\Carousel\CarouselLangageDataPersister: ~
+
+    # === Order ===
+    App\Application\State\Order\OrderDataPersister:
+        decorates: 'api_platform.doctrine.orm.state.persist_processor'
+        arguments:
+            $entityManager: '@doctrine.orm.entity_manager'
+            $decoratedProcessor: '@App\Application\State\Order\OrderDataPersister.inner'
+
+    App\Application\State\Order\OrderItem\OrderItemDataPersister:
+        arguments:
+            $entityManager: '@doctrine.orm.entity_manager'
+
+    App\Application\State\Order\OrderItem\OrderItemPatchProcessor: ~
+    App\Application\State\Order\OrderItem\SecureOrderItemDeletionProcessor: ~
+
+    # === Cart / Checkout ===
+    App\Application\State\Cart\CartProvider: ~
+    App\Application\State\Cart\CreateCartProcessor: ~
+    App\Application\State\Checkout\CheckoutProcessor: ~
+
+    # === Subscription ===
+    App\Application\State\Subscription\SubscriptionTypeDataPersister: ~
+
+    # === JWT Success Handler ===
+    App\Infrastructure\Security\JWTLoginSuccessHandler:
         tags:
             - { name: kernel.event_subscriber }
-
-
-

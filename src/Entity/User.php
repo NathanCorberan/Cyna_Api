@@ -13,8 +13,8 @@ use App\State\UserMeProvider;
 use App\State\UserPasswordChangeStateProcessor;
 use App\State\UserUpdateProcessor;
 
-use App\Dto\PasswordChangeDTO;
-use App\Dto\UserUpdateDTO;
+use App\Dto\User\PasswordChangeDto;
+use App\Dto\User\UserUpdateDto;
 
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Get;
@@ -61,12 +61,12 @@ use Symfony\Component\Serializer\Annotation\Groups;
             uriTemplate: '/user/passchange',
             name: 'users_change_password',
             processor: UserPasswordChangeStateProcessor::class,
-            input: PasswordChangeDTO::class,
+            input: PasswordChangeDto::class,
             security: "is_granted('IS_AUTHENTICATED_FULLY')"
         ),
         new Patch(
             uriTemplate: '/me/update',
-            input: UserUpdateDTO::class,
+            input: UserUpdateDto::class,
             processor: UserUpdateProcessor::class,
             normalizationContext: ['groups' => ['user:read']],
             denormalizationContext: ['groups' => ['user:update']],

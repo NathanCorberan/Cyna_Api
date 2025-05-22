@@ -14,8 +14,8 @@ use ApiPlatform\Metadata\Delete;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Serializer\Annotation\SerializedName;
 use App\State\OrderItemDataPersister;
-use App\Dto\OrderItemInput;
-use App\Dto\OrderItemPatchInput;
+use App\Dto\Order\OrderItemInputDto;
+use App\Dto\Order\OrderItemPatchInputDto;
 use App\State\CartProvider;
 use ApiPlatform\Metadata\Delete as DeleteOperation;
 use App\State\SecureOrderItemDeletionProcessor;
@@ -29,14 +29,14 @@ use App\State\OrderItemPatchState;
         new GetCollection(),
         new Get(),
         new Post(
-            input: OrderItemInput::class,
+            input: OrderItemInputDto::class,
             output: OrderItem::class,
             processor: OrderItemDataPersister::class,
             security: "is_granted('PUBLIC_ACCESS')"
             
         ),
         new Patch(
-            input: OrderItemPatchInput::class,
+            input: OrderItemPatchInputDto::class,
             processor: OrderItemPatchState::class,
             security: "is_granted('PUBLIC_ACCESS')"
         ),
