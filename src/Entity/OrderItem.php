@@ -85,7 +85,7 @@ use ArrayObject;
             uriTemplate: '/order_items/{id}/increment',
             processor: IncrementOrderItemQuantityProcessor::class,
             name: 'order_item_increment',
-            input: false, // ⬅️ DIT À API PLATFORM DE NE RIEN DÉSÉRIALISER
+            input: false, 
             openapi: new Operation(
                 summary: 'Incrémenter la quantité d’un OrderItem',
                 description: 'Augmente la quantité d’un OrderItem de +1 et recalcule automatiquement le total_price.',

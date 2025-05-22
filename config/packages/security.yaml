@@ -24,7 +24,10 @@ security:
                 success_handler: lexik_jwt_authentication.handler.authentication_success
                 failure_handler: lexik_jwt_authentication.handler.authentication_failure
 
-        
+        refresh:
+            pattern: ^/api/token/refresh
+            stateless: true
+
 
         api:
             pattern: ^/api
@@ -50,6 +53,7 @@ security:
 
         # ✅ Login (Connexion)
         - { path: ^/api/login, methods: [POST], roles: IS_AUTHENTICATED_ANONYMOUSLY }
+        - { path: ^/api/token/refresh, methods: [POST], roles: PUBLIC_ACCESS }
 
         # ✅ Gestion des adresses utilisateur
         - { path: ^/api/user_addresses, methods: [GET], roles: ROLE_ADMIN }
