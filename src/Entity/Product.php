@@ -16,24 +16,24 @@ use ApiPlatform\Metadata\GetCollection;
 use Symfony\Component\Serializer\Annotation\Groups;
 
 use Symfony\Component\Validator\Constraints as Assert;
-use App\State\ProductDataPersister;
-use App\State\ProductStateProvider;
-use App\State\ProductTopOrdersStateProvider;
+use App\Application\State\Product\ProductDataPersister;
+use App\Application\State\Product\ProductProvider;
+use App\Application\State\Product\TopOrdersProductProvider;
 
 #[ORM\Entity(repositoryClass: ProductRepository::class)]
 #[ApiResource(
     normalizationContext: ['groups' => ['Product:read']],
     denormalizationContext: ['groups' => ['Product:write']],
     operations: [
-        new GetCollection(security: "is_granted('PUBLIC_ACCESS')", provider: ProductStateProvider::class),
-        new Get(provider: ProductStateProvider::class),
+        new GetCollection(security: "is_granted('PUBLIC_ACCESS')", provider: ProductProvider::class),
+        new Get(provider: ProductProvider::class),
         new Post(security: "is_granted('ROLE_ADMIN')"),
         new Patch(security: "is_granted('ROLE_ADMIN')", uriTemplate: '/products/{id}'),
         new Delete(security: "is_granted('ROLE_ADMIN')", uriTemplate: '/products/{id}'), # ⛔️ PAS de processor ici
         new Get(
             uriTemplate: '/top/products',
             name: 'products_top',
-            provider: ProductTopOrdersStateProvider::class,
+            provider: TopOrdersProductProvider::class,
             security: "is_granted('PUBLIC_ACCESS')"
         )
     ],

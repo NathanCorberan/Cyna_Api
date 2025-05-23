@@ -3,7 +3,7 @@
 namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
-use App\State\CategoryImageDataPersister;
+use App\Application\State\Category\CategoryImageDataPersister;
 use Doctrine\DBAL\Types\Types;
 
 use ApiPlatform\Metadata\ApiResource;

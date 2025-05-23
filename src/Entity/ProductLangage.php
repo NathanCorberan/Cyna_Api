@@ -13,7 +13,7 @@ use ApiPlatform\Metadata\Patch;
 use ApiPlatform\Metadata\Delete;
 use ApiPlatform\Metadata\GetCollection;
 use Symfony\Component\Serializer\Annotation\Groups;
-use App\State\ProductLangageDataPersister;
+use App\Application\State\Product\ProductLangageDataPersister;
 
 #[ORM\Entity(repositoryClass: ProductLangageRepository::class)]
 #[ApiResource(

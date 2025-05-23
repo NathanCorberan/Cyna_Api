@@ -8,10 +8,10 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
-use App\State\UserPasswordHasher;
-use App\State\UserMeProvider;
-use App\State\UserPasswordChangeStateProcessor;
-use App\State\UserUpdateProcessor;
+use App\Application\State\User\UserPasswordHasher;
+use App\Application\State\User\UserMeProvider;
+use App\Application\State\User\UserPasswordChangeStateProcessor;
+use App\Application\State\User\UserUpdateProcessor;
 
 use App\Dto\User\PasswordChangeDto;
 use App\Dto\User\UserUpdateDto;

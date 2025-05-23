@@ -16,10 +16,10 @@ use ApiPlatform\Metadata\Patch;
 use ApiPlatform\Metadata\Delete;
 use ApiPlatform\Metadata\GetCollection;
 use Symfony\Component\Validator\Constraints as Assert;
-use App\State\OrderDataPersister;
+use App\Application\State\Order\OrderDataPersister;
 use App\Dto\Cart\CreateCartInputDto;
 use App\Application\State\Cart\CreateCartProcessor;
-use App\State\CheckoutState;
+use App\Application\State\Checkout\CheckoutState;
 
 #[ORM\Entity(repositoryClass: OrderRepository::class)]
 #[ORM\Table(name: '`order`')]

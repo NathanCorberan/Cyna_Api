@@ -11,6 +11,7 @@ services:
         exclude:
             - '../src/DependencyInjection/'
             - '../src/Domain/Entity/'
+            - '../src/Dto/'
             - '../src/Kernel.php'
 
     # === User ===
@@ -66,3 +67,9 @@ services:
     App\Infrastructure\Security\JWTLoginSuccessHandler:
         tags:
             - { name: kernel.event_subscriber }
+
+    App\Application\State\Auth\RefreshTokenStateProcessor:
+        arguments:
+            $refreshTokenManager: '@gesdinet.jwtrefreshtoken.refresh_token_manager'
+            $jwtManager: '@lexik_jwt_authentication.jwt_manager'
+            $userProvider: '@security.user.provider.concrete.app_user_provider'

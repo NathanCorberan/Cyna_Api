@@ -16,7 +16,7 @@ use ApiPlatform\Metadata\GetCollection;
 use Symfony\Component\Serializer\Annotation\Groups;
 
 use App\Entity\Product;
-use App\State\CategoryProductsProvider;
+use App\Application\State\Category\CategoryProductsProvider;
 
 
 #[ORM\Entity(repositoryClass: CategoryRepository::class)]
