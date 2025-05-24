@@ -19,7 +19,6 @@ RUN composer install
 # Passe l'environnement en prod (utile si tu utilises symfony/dotenv)
 RUN composer dump-env prod
 
-
 # ---------- 2) Production stage: PHP-FPM (Alpine) ----------
 FROM php:8.2-fpm-alpine AS production
 
@@ -38,27 +37,26 @@ RUN apk add --no-cache \
   && apk del autoconf g++ make \
   && rm -rf /var/cache/apk/*
 
-
-WORKDIR /app
+# Travaille toujours dans /var/www
+WORKDIR /var/www
 
 # Copie tout le projet et les vendors déjà générés depuis le builder
-COPY --from=builder /app /app
+COPY --from=builder /app /var/www
 
 COPY docker/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 # Crée un utilisateur non-root pour la sécurité
 RUN addgroup -g 1000 app && adduser -u 1000 -G app -s /sbin/nologin -D app \
-    && chown -R app:app /app
+    && chown -R app:app /var/www
+
 USER app
 
-# Expose le port PHP-FPM (par défaut : 9000)
-EXPOSE 8000
+# Expose le port PHP-FPM standard (pas 8000 !)
+EXPOSE 9000
 
-# Installe les assets Symfony (très important)
+# Installe les assets Symfony
 RUN php bin/console assets:install public
 
-WORKDIR /var/www
-
-
+# Commande d'entrée
 CMD ["/entrypoint.sh"]
