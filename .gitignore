@@ -4,6 +4,8 @@
 /.env
 /.env.local
 /.env.*.local
+/.env.prod
+/.env.dev
 /.phpunit.result.cache
 /node_modules/
 /public/build/
@@ -36,11 +38,9 @@
 /.docker/
 
 ### Autres fichiers inutiles ###
+/docker/mysql/
 /*.swp
 *.bak
 *.tmp
 .DS_Store
 Thumbs.db
-.env*
-.env.prod
-.env.dev

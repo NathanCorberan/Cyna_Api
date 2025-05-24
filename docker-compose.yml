@@ -27,6 +27,7 @@ services:
       - "3306:3306"
     volumes:
       - db_data:/var/lib/mysql
+      - ./docker/mysql/init-cyna-user.sql:/docker-entrypoint-initdb.d/init-cyna-user.sql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${MYSQL_ROOT_PASSWORD}"]
       interval: 10s
@@ -40,8 +41,8 @@ services:
     environment:
       PMA_HOST: database
       PMA_PORT: 3306
-      PMA_USER: admin
-      PMA_PASSWORD: caribou
+      # PMA_USER: admin
+      # PMA_PASSWORD: caribou
     ports:
       - "8080:80"
     depends_on:
