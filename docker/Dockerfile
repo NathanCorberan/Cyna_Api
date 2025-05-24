@@ -8,7 +8,7 @@ FROM composer:2.8 AS builder
 WORKDIR /app
 
 # Copie les fichiers Composer d'abord (pour le cache Docker)
-COPY composer.json composer.lock ./
+COPY composer.json ./
 
 # Copie tout le code du projet (Symfony en a besoin pour composer install)
 COPY . .
