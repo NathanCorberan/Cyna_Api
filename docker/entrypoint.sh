@@ -15,7 +15,7 @@ until php -r "try {
 done
 
 echo "✅ Base de données dispo, migration en cours..."
-php bin/console doctrine:migration:migrate --no-interaction
+php /app/bin/console doctrine:migration:migrate --no-interaction
 
 echo "🚀 Migration terminée, lancement de PHP-FPM"
 exec php-fpm
