@@ -13,4 +13,3 @@ final class TokenRefreshOutput
         $this->refresh_token = $refresh_token;
     }
 }
-// }

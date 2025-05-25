@@ -10,7 +10,7 @@ use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
-use App\Entity\RefreshToken;
+use App\Dto\Auth\TokenRefreshOutput;
 
 class RefreshTokenStateProcessor implements ProcessorInterface
 {
@@ -21,16 +21,15 @@ class RefreshTokenStateProcessor implements ProcessorInterface
         private RequestStack $requestStack
     ) {}
 
-    public function process(mixed $data, Operation $operation, array $uriVariables = [], array $context = []): ?array
+    public function process(mixed $data, Operation $operation, array $uriVariables = [], array $context = []): TokenRefreshOutput
     {
-        $request = $this->requestStack->getCurrentRequest();
-        $content = json_decode($request->getContent(), true);
-
-        if (!isset($content['refresh_token'])) {
+        // Si tu passes l'input DTO, utilise $data:
+        $refreshTokenValue = $data->refresh_token ?? null;
+        if (!$refreshTokenValue) {
             throw new BadRequestHttpException('Le champ "refresh_token" est requis.');
         }
 
-        $oldToken = $this->refreshTokenManager->get($content['refresh_token']);
+        $oldToken = $this->refreshTokenManager->get($refreshTokenValue);
 
         if (!$oldToken) {
             throw new BadRequestHttpException('Refresh token invalide ou expiré.');
@@ -48,7 +47,7 @@ class RefreshTokenStateProcessor implements ProcessorInterface
 
         // Créer un nouveau refresh token
         $newRefreshToken = $this->refreshTokenManager->create();
-        $newRefreshToken->setRefreshToken();
+        $newRefreshToken->setRefreshToken(); // génère une valeur random
         $newRefreshToken->setUsername($username);
         $newRefreshToken->setValid(new \DateTime('+30 days'));
         $this->refreshTokenManager->save($newRefreshToken);
@@ -56,10 +55,9 @@ class RefreshTokenStateProcessor implements ProcessorInterface
         // Créer un nouveau JWT
         $jwt = $this->jwtManager->create($user);
 
-        return new \App\Dto\Auth\TokenRefreshOutput(
+        return new TokenRefreshOutput(
             $jwt,
             $newRefreshToken->getRefreshToken()
         );
-
     }
 }
