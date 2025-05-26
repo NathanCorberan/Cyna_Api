@@ -78,3 +78,7 @@ services:
             $refreshTokenManager: '@gesdinet.jwtrefreshtoken.refresh_token_manager'
             $jwtManager: '@lexik_jwt_authentication.jwt_manager'
             $userProvider: '@security.user.provider.concrete.app_user_provider'
+    
+    App\OpenApi\OpenApiFactory:
+        decorates: 'api_platform.openapi.factory'
+        arguments: [ '@App\OpenApi\OpenApiFactory.inner' ]

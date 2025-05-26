@@ -12,6 +12,7 @@ use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\Post;
 use ApiPlatform\Metadata\Patch;
+use ApiPlatform\Metadata\Put;
 use ApiPlatform\Metadata\Delete;
 use ApiPlatform\Metadata\GetCollection;
 use Symfony\Component\Serializer\Annotation\Groups;
@@ -37,7 +38,14 @@ use App\Application\State\Carousel\CarouselMediaInputProcessor;
             processor: CarouselMediaInputProcessor::class,
             deserialize: false,
         ),
-        new Patch(security: "is_granted('ROLE_ADMIN')"), 
+        new Put(
+            security: "is_granted('ROLE_ADMIN')",
+            input: CarouselMediaInput::class,
+            inputFormats: ['multipart' => ['multipart/form-data']],
+            processor: CarouselMediaInputProcessor::class,
+            deserialize: false,
+        ),
+
         new Delete(security: "is_granted('ROLE_ADMIN')"),
     ]
     
