@@ -15,6 +15,11 @@ use ApiPlatform\Metadata\Patch;
 use ApiPlatform\Metadata\Delete;
 use ApiPlatform\Metadata\GetCollection;
 use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
+
+use App\Dto\Carousel\CarouselMediaInput;
+use App\Application\State\Carousel\CarouselMediaInputProcessor;
+
 
 #[ORM\Entity(repositoryClass: CarouselRepository::class)]
 #[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_PANEL_ORDER', fields: ['panel_order'])]
@@ -25,7 +30,13 @@ use Symfony\Component\Serializer\Annotation\Groups;
     operations: [
         new GetCollection(),
         new Get(security: "is_granted('PUBLIC_ACCESS')"), 
-        new Post(security: "is_granted('ROLE_ADMIN')"), 
+        new Post(
+            security: "is_granted('ROLE_ADMIN')",
+            input: CarouselMediaInput::class,
+            inputFormats: ['multipart' => ['multipart/form-data']],
+            processor: CarouselMediaInputProcessor::class,
+            deserialize: false,
+        ),
         new Patch(security: "is_granted('ROLE_ADMIN')"), 
         new Delete(security: "is_granted('ROLE_ADMIN')"),
     ]

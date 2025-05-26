@@ -40,6 +40,11 @@ services:
 
     # === Carousel ===
     App\Application\State\Carousel\CarouselLangageDataPersister: ~
+    App\Application\State\Carousel\CarouselMediaInputProcessor:
+        autowire: true
+        autoconfigure: true
+        arguments:
+            $projectDir: '%kernel.project_dir%'
 
     # === Order ===
     App\Application\State\Order\OrderDataPersister:
