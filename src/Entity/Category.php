@@ -17,6 +17,7 @@ use Symfony\Component\Serializer\Annotation\Groups;
 
 use App\Entity\Product;
 use App\Application\State\Category\CategoryProductsProvider;
+use App\Dto\Product\ProductDetailsOutputDto;
 
 
 #[ORM\Entity(repositoryClass: CategoryRepository::class)]
@@ -35,8 +36,8 @@ use App\Application\State\Category\CategoryProductsProvider;
             name: 'get_category_products',
             provider: CategoryProductsProvider::class,
             status: 200,
-            output: Product::class,
-            normalizationContext: ['groups' => ['Product:read']] // ← MAJUSCULE ici !
+            output: ProductDetailsOutputDto::class,
+            normalizationContext: ['groups' => ['Product:read']]
         )
 
 
