@@ -284,4 +284,19 @@ class Product
 
         return $this;
     }
+
+    public function getNameForLocale(string $locale = 'fr'): ?string
+    {
+        foreach ($this->getProductLangages() as $langage) {
+            if ($langage->getCode() === $locale) {
+                return $langage->getName();
+            }
+        }
+        // Fallback: retourne le premier nom dispo s'il n'y a pas la langue demandée
+        if (!$this->getProductLangages()->isEmpty()) {
+            return $this->getProductLangages()->first()->getName();
+        }
+        return null;
+    }
+
 }

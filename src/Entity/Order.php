@@ -20,6 +20,9 @@ use App\Application\State\Order\OrderDataPersister;
 use App\Dto\Cart\CreateCartInputDto;
 use App\Application\State\Cart\CreateCartProcessor;
 use App\Application\State\Checkout\CheckoutState;
+use App\Dto\Order\UserOrderOutputDto;
+use App\Application\State\Order\UserOrdersProvider;
+
 
 #[ORM\Entity(repositoryClass: OrderRepository::class)]
 #[ORM\Table(name: '`order`')]
@@ -28,6 +31,13 @@ use App\Application\State\Checkout\CheckoutState;
     denormalizationContext: ['groups' => ['Order:write']],
     operations: [
         new GetCollection(),
+        new GetCollection(
+            uriTemplate: '/my-orders',
+            security: "is_granted('IS_AUTHENTICATED_FULLY')",
+            provider: UserOrdersProvider::class,
+            output: UserOrderOutputDto::class,
+            normalizationContext: ['groups' => []]
+        ),
         new Get(),
         new Post(
             uriTemplate: '/orders',
