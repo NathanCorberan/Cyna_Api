@@ -116,6 +116,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[Groups(['user:read', 'user:write'])]
     private ?bool $isActivate = null;
 
+    #[ORM\Column(type: 'string', nullable: true)]
+    private $stripeCustomerId;
+
     /**
      * @var Collection<int, Order>
      */
@@ -248,6 +251,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         $this->isActivate = $isActivate;
 
+        return $this;
+    }
+
+    public function getStripeCustomerId(): ?string
+    {
+        return $this->stripeCustomerId;
+    }
+
+    public function setStripeCustomerId(?string $stripeCustomerId): self
+    {
+        $this->stripeCustomerId = $stripeCustomerId;
         return $this;
     }
 

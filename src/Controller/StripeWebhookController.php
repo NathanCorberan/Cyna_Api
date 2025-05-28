@@ -2,52 +2,125 @@
 
 namespace App\Controller;
 
+use App\Repository\UserRepository;
 use App\Repository\OrderRepository;
-use Doctrine\ORM\EntityManagerInterface;
+use App\Repository\SubscriptionTypeRepository;
+use App\Entity\Subscription;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Annotation\Route;
+use Stripe\Stripe;
+use Stripe\Webhook;
 
 class StripeWebhookController extends AbstractController
 {
     #[Route('/api/payment/webhook', name: 'stripe_webhook', methods: ['POST'])]
-    public function webhook(
+    public function __invoke(
         Request $request,
-        OrderRepository $orderRepo,
-        EntityManagerInterface $em
-    ): Response {
+        UserRepository $userRepository,
+        OrderRepository $orderRepository,
+        SubscriptionTypeRepository $subscriptionTypeRepository
+    ) {
+        Stripe::setApiKey($_ENV['STRIPE_SECRET_KEY']);
         $payload = $request->getContent();
         $sig_header = $request->headers->get('stripe-signature');
-        $endpoint_secret = $_ENV['STRIPE_WEBHOOK_SECRET'] ?? '';
+        $endpoint_secret = $_ENV['STRIPE_WEBHOOK_SECRET'];
 
-        // Vérifie la signature Stripe pour la sécurité
         try {
-            $event = \Stripe\Webhook::constructEvent($payload, $sig_header, $endpoint_secret);
-        } catch (\UnexpectedValueException $e) {
-            // Mauvais payload
-            return new Response('Invalid payload', 400);
-        } catch (\Stripe\Exception\SignatureVerificationException $e) {
-            // Mauvaise signature
-            return new Response('Invalid signature', 400);
+            $event = Webhook::constructEvent($payload, $sig_header, $endpoint_secret);
+        } catch (\Exception $e) {
+            return new Response('Webhook Error: ' . $e->getMessage(), 400);
         }
 
-        // Gère l’événement de paiement réussi
-        if ($event->type === 'checkout.session.completed') {
-            $session = $event->data->object;
-            $orderId = $session->metadata->order_id ?? null;
-            if ($orderId) {
-                $order = $orderRepo->find($orderId);
-                if ($order) {
-                    $order->setStatus('payed');
-                    // Ici tu peux aussi décrémenter le stock, envoyer un mail, etc.
-                    $em->flush();
+        $em = $this->getDoctrine()->getManager();
+
+        // --- Pour un paiement unique (one_time)
+        if ($event->type === 'payment_intent.succeeded') {
+            $intent = $event->data->object;
+
+            $customerId = $intent->customer ?? null;
+            $orderId = $intent->metadata->order_id ?? null;
+
+            if (!$customerId || !$orderId) {
+                return new Response('Missing data', 400);
+            }
+
+            $user = $userRepository->findOneBy(['stripeCustomerId' => $customerId]);
+            $order = $orderRepository->find($orderId);
+
+            if ($user && $order) {
+                // Met à jour le statut de la commande
+                $order->setStatus('payed');
+
+                foreach ($order->getOrderItems() as $item) {
+                    $subscriptionType = $item->getProduct()->getSubscriptionType();
+                    $quantity = $item->getQuantity();
+                    $startDate = (new \DateTime())->format('Y-m-d');
+                    // Si besoin, adapte pour un vrai DateTime
+                    $endDate = (new \DateTime())->modify(
+                        strtolower($subscriptionType->getType()) === 'monthly' ? '+1 month' : (
+                            strtolower($subscriptionType->getType()) === 'yearly' ? '+1 year' : '+1 month'
+                        )
+                    )->format('Y-m-d');
+
+                    for ($i = 0; $i < $quantity; $i++) {
+                        $subscription = new Subscription();
+                        $subscription->setUser($user);
+                        $subscription->setSubscriptionType($subscriptionType);
+                        $subscription->setStartDate($startDate);
+                        $subscription->setEndDate($endDate);
+                        $subscription->setStatus('active');
+                        $em->persist($subscription);
+                    }
                 }
+
+                $em->flush();
             }
         }
 
-        // Tu peux gérer d’autres events Stripe ici si besoin
+        // --- Pour un abonnement récurrent (monthly, yearly)
+        elseif ($event->type === 'invoice.paid') {
+            $invoice = $event->data->object;
 
-        return new Response('OK', 200);
+            $customerId = $invoice->customer ?? null;
+            $orderId = $invoice->lines->data[0]->metadata->order_id ?? $invoice->metadata->order_id ?? null;
+
+            if (!$customerId || !$orderId) {
+                return new Response('Missing data', 400);
+            }
+
+            $user = $userRepository->findOneBy(['stripeCustomerId' => $customerId]);
+            $order = $orderRepository->find($orderId);
+
+            if ($user && $order) {
+                $order->setStatus('payed');
+
+                foreach ($order->getOrderItems() as $item) {
+                    $subscriptionType = $item->getProduct()->getSubscriptionType();
+                    $quantity = $item->getQuantity();
+                    $startDate = (new \DateTime())->format('Y-m-d');
+                    $endDate = (new \DateTime())->modify(
+                        strtolower($subscriptionType->getType()) === 'monthly' ? '+1 month' : (
+                            strtolower($subscriptionType->getType()) === 'yearly' ? '+1 year' : '+1 month'
+                        )
+                    )->format('Y-m-d');
+
+                    for ($i = 0; $i < $quantity; $i++) {
+                        $subscription = new Subscription();
+                        $subscription->setUser($user);
+                        $subscription->setSubscriptionType($subscriptionType);
+                        $subscription->setStartDate($startDate);
+                        $subscription->setEndDate($endDate);
+                        $subscription->setStatus('active');
+                        $em->persist($subscription);
+                    }
+                }
+
+                $em->flush();
+            }
+        }
+
+        return new Response('Webhook handled', 200);
     }
 }

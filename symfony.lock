@@ -214,5 +214,14 @@
         "files": [
             "./config/packages/validator.yaml"
         ]
+    },
+    "talleu/php-redis-om": {
+        "version": "0.4",
+        "recipe": {
+            "repo": "github.com/symfony/recipes-contrib",
+            "branch": "main",
+            "version": "0.3",
+            "ref": "7bb2ce82d2d034e3b8acc5592419450ddf4f9c05"
+        }
     }
 }

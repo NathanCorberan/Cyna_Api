@@ -42,6 +42,9 @@ class SubscriptionType
     #[Groups(['SubscriptionType:write'])] // ✅ Écriture uniquement
     private ?int $product_id = null;
 
+    #[ORM\Column(type: 'string', nullable: true)]
+    private $stripePriceId;
+
     /**
      * @var Collection<int, Subscription>
      */
@@ -100,6 +103,15 @@ class SubscriptionType
     {
         $this->product_id = $product_id;
         return $this;
+    }
+
+    public function getStripePriceId(): ?string 
+    { 
+        return $this->stripePriceId; 
+    }
+    public function setStripePriceId(?string $id): self 
+    { 
+        $this->stripePriceId = $id; return $this; 
     }
 
     /**
