@@ -25,6 +25,7 @@ use App\Application\State\Order\OrderItem\OrderItemPatchState;
 use ApiPlatform\OpenApi\Model\Operation;
 use ApiPlatform\OpenApi\Model\RequestBody;
 use ArrayObject;
+use App\Entity\SubscriptionType;
 
 #[ORM\Entity(repositoryClass: OrderItemRepository::class)]
 #[ApiResource(
@@ -154,6 +155,9 @@ class OrderItem
     #[SerializedName("product_id")]
     private ?int $product_id = null;
 
+    #[ORM\ManyToOne(targetEntity: SubscriptionType::class)]
+    private ?SubscriptionType $subscriptionType = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -235,6 +239,18 @@ class OrderItem
     public function setProductId(?int $product_id): static
     {
         $this->product_id = $product_id;
+        return $this;
+    }
+
+    
+    public function getSubscriptionType(): ?SubscriptionType
+    {
+        return $this->subscriptionType;
+    }
+
+    public function setSubscriptionType(?SubscriptionType $subscriptionType): self
+    {
+        $this->subscriptionType = $subscriptionType;
         return $this;
     }
 

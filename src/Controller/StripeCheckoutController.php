@@ -31,7 +31,6 @@ class StripeCheckoutController extends AbstractController
         Stripe::setApiKey($_ENV['STRIPE_SECRET_KEY']);
         $customerId = $user->getStripeCustomerId();
 
-        // Regrouper les items du panier uniquement par les types utiles
         $byType = [
             'one_time' => [],
             'monthly'  => [],
@@ -39,9 +38,14 @@ class StripeCheckoutController extends AbstractController
         ];
 
         foreach ($order->getOrderItems() as $item) {
-            $type = strtolower($item->getProduct()->getSubscriptionType()->getType());
+            $subscriptionType = $item->getSubscriptionType();
+            if (!$subscriptionType) {
+                $byType['one_time'][] = $item;
+                continue;
+            }
+            $type = strtolower($subscriptionType->getType());
             if (!isset($byType[$type])) {
-                $byType['one_time'][] = $item; // Si le type n'est pas connu, on le classe en one_time par défaut
+                $byType['one_time'][] = $item;
             } else {
                 $byType[$type][] = $item;
             }
@@ -77,54 +81,78 @@ class StripeCheckoutController extends AbstractController
         if (count($byType['monthly']) > 0) {
             $items = [];
             foreach ($byType['monthly'] as $item) {
-                $stripePriceId = $item->getProduct()->getSubscriptionType()->getStripePriceId();
-                $items[] = [
-                    'price'    => $stripePriceId,
-                    'quantity' => $item->getQuantity()
+                $subscriptionType = $item->getSubscriptionType();
+                if ($subscriptionType) {
+                    $stripePriceId = $subscriptionType->getStripePriceId();
+                    $items[] = [
+                        'price'    => $stripePriceId,
+                        'quantity' => $item->getQuantity()
+                    ];
+                }
+            }
+            if (!empty($items)) {
+                $subscription = Subscription::create([
+                    'customer' => $customerId,
+                    'items' => $items,
+                    'default_payment_method' => $paymentMethodId,
+                    'metadata' => [
+                        'order_id' => $orderId,
+                        'type'     => 'monthly'
+                    ],
+                    'expand' => ['latest_invoice.confirmation_secret'],
+                ]);
+                $clientSecret = null;
+                if (
+                    isset($subscription->latest_invoice) &&
+                    isset($subscription->latest_invoice->confirmation_secret)
+                ) {
+                    $clientSecret = $subscription->latest_invoice->confirmation_secret->client_secret;
+                }
+                $stripeResults['monthly'] = [
+                    'subscription_id' => $subscription->id,
+                    'client_secret'   => $clientSecret,
+                    'status'          => $subscription->status
                 ];
             }
-            $subscription = Subscription::create([
-                'customer' => $customerId,
-                'items' => $items,
-                'default_payment_method' => $paymentMethodId,
-                'metadata' => [
-                    'order_id' => $orderId,
-                    'type'     => 'monthly'
-                ],
-                'expand' => ['latest_invoice.payment_intent'],
-            ]);
-            $stripeResults['monthly'] = [
-                'subscription_id' => $subscription->id,
-                'client_secret'   => $subscription->latest_invoice->payment_intent->client_secret ?? null,
-                'status'          => $subscription->status
-            ];
         }
 
         // --- YEARLY SUBSCRIPTIONS ---
         if (count($byType['yearly']) > 0) {
             $items = [];
             foreach ($byType['yearly'] as $item) {
-                $stripePriceId = $item->getProduct()->getSubscriptionType()->getStripePriceId();
-                $items[] = [
-                    'price'    => $stripePriceId,
-                    'quantity' => $item->getQuantity()
+                $subscriptionType = $item->getSubscriptionType();
+                if ($subscriptionType) {
+                    $stripePriceId = $subscriptionType->getStripePriceId();
+                    $items[] = [
+                        'price'    => $stripePriceId,
+                        'quantity' => $item->getQuantity()
+                    ];
+                }
+            }
+            if (!empty($items)) {
+                $subscription = Subscription::create([
+                    'customer' => $customerId,
+                    'items' => $items,
+                    'default_payment_method' => $paymentMethodId,
+                    'metadata' => [
+                        'order_id' => $orderId,
+                        'type'     => 'yearly'
+                    ],
+                    'expand' => ['latest_invoice.confirmation_secret'],
+                ]);
+                $clientSecret = null;
+                if (
+                    isset($subscription->latest_invoice) &&
+                    isset($subscription->latest_invoice->confirmation_secret)
+                ) {
+                    $clientSecret = $subscription->latest_invoice->confirmation_secret->client_secret;
+                }
+                $stripeResults['yearly'] = [
+                    'subscription_id' => $subscription->id,
+                    'client_secret'   => $clientSecret,
+                    'status'          => $subscription->status
                 ];
             }
-            $subscription = Subscription::create([
-                'customer' => $customerId,
-                'items' => $items,
-                'default_payment_method' => $paymentMethodId,
-                'metadata' => [
-                    'order_id' => $orderId,
-                    'type'     => 'yearly'
-                ],
-                'expand' => ['latest_invoice.payment_intent'],
-            ]);
-            $stripeResults['yearly'] = [
-                'subscription_id' => $subscription->id,
-                'client_secret'   => $subscription->latest_invoice->payment_intent->client_secret ?? null,
-                'status'          => $subscription->status
-            ];
         }
 
         return $this->json(['stripe_results' => $stripeResults]);

@@ -6,12 +6,20 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Doctrine\ORM\EntityManagerInterface;
 use Stripe\Stripe;
 use Stripe\Customer;
 use Stripe\SetupIntent;
 
 class StripeSetupIntentController extends AbstractController
 {
+    private EntityManagerInterface $em;
+
+    public function __construct(EntityManagerInterface $em)
+    {
+        $this->em = $em;
+    }
+
     #[Route('/api/payment/setup-intent', name: 'stripe_setup_intent', methods: ['POST'])]
     public function __invoke(Request $request)
     {
@@ -28,18 +36,18 @@ class StripeSetupIntentController extends AbstractController
 
         try {
             if (!$user->getStripeCustomerId()) {
-                $customer = \Stripe\Customer::create([
+                $customer = Customer::create([
                     'email' => $user->getEmail(),
                     'name'  => $user->getFirstName() . ' ' . $user->getLastName(),
                 ]);
                 $user->setStripeCustomerId($customer->id);
-                $this->getDoctrine()->getManager()->flush();
+                $this->em->flush();
             }
 
             $data = json_decode($request->getContent(), true);
             $orderId = $data['order_id'] ?? null;
 
-            $setupIntent = \Stripe\SetupIntent::create([
+            $setupIntent = SetupIntent::create([
                 'customer' => $user->getStripeCustomerId(),
                 'payment_method_types' => ['card'],
                 'metadata' => [
@@ -55,5 +63,4 @@ class StripeSetupIntentController extends AbstractController
             return $this->json(['error' => $e->getMessage()], 500);
         }
     }
-
 }
