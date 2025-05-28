@@ -19,6 +19,7 @@ use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
 use App\Application\State\Product\ProductDataPersister;
 use App\Application\State\Product\ProductProvider;
+use App\Application\State\Product\ProductItemProvider;
 use App\Application\State\Product\TopOrdersProductProvider;
 
 #[ORM\Entity(repositoryClass: ProductRepository::class)]
@@ -27,7 +28,7 @@ use App\Application\State\Product\TopOrdersProductProvider;
     denormalizationContext: ['groups' => ['Product:write']],
     operations: [
         new GetCollection(security: "is_granted('PUBLIC_ACCESS')", provider: ProductProvider::class),
-        new Get(security: "is_granted('PUBLIC_ACCESS')", provider: ProductProvider::class),
+        new Get(security: "is_granted('PUBLIC_ACCESS')", provider: ProductItemProvider::class),
         new Post(security: "is_granted('ROLE_ADMIN')"),
         new Patch(security: "is_granted('ROLE_ADMIN')", uriTemplate: '/products/{id}'),
         new Delete(security: "is_granted('ROLE_ADMIN')", uriTemplate: '/products/{id}'), # ⛔️ PAS de processor ici

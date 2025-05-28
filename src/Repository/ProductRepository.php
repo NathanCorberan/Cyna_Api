@@ -60,4 +60,18 @@ class ProductRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    public function findOneWithRelations(int $id): ?Product
+    {
+        return $this->createQueryBuilder('p')
+            ->leftJoin('p.category', 'c')->addSelect('c')
+            ->leftJoin('p.productLangages', 'pl')->addSelect('pl')
+            ->leftJoin('p.productImages', 'pi')->addSelect('pi')
+            ->leftJoin('p.subscriptionTypes', 'st')->addSelect('st')
+            ->where('p.id = :id')
+            ->setParameter('id', $id)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
 }
