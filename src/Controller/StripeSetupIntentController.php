@@ -16,31 +16,44 @@ class StripeSetupIntentController extends AbstractController
     public function __invoke(Request $request)
     {
         $user = $this->getUser();
-        Stripe::setApiKey($_ENV['STRIPE_SECRET_KEY']);
-
-        if (!$user->getStripeCustomerId()) {
-            $customer = Customer::create([
-                'email' => $user->getEmail(),
-                'name'  => $user->getFirstName() . ' ' . $user->getLastName(),
-            ]);
-            $user->setStripeCustomerId($customer->id);
-            $this->getDoctrine()->getManager()->flush();
+        if (!$user) {
+            return $this->json(['error' => 'User not authenticated'], 401);
         }
 
-        $data = json_decode($request->getContent(), true);
-        $orderId = $data['order_id'] ?? null;
+        try {
+            Stripe::setApiKey($_ENV['STRIPE_SECRET_KEY']);
+        } catch (\Exception $e) {
+            return $this->json(['error' => 'Stripe API key missing or invalid', 'details' => $e->getMessage()], 500);
+        }
 
-        $setupIntent = SetupIntent::create([
-            'customer' => $user->getStripeCustomerId(),
-            'payment_method_types' => ['card'],
-            'metadata' => [
-                'order_id' => $orderId // Pour retrouver l'order plus tard si besoin
-            ]
-        ]);
+        try {
+            if (!$user->getStripeCustomerId()) {
+                $customer = \Stripe\Customer::create([
+                    'email' => $user->getEmail(),
+                    'name'  => $user->getFirstName() . ' ' . $user->getLastName(),
+                ]);
+                $user->setStripeCustomerId($customer->id);
+                $this->getDoctrine()->getManager()->flush();
+            }
 
-        return $this->json([
-            'client_secret' => $setupIntent->client_secret,
-            'setup_intent_id' => $setupIntent->id,
-        ]);
+            $data = json_decode($request->getContent(), true);
+            $orderId = $data['order_id'] ?? null;
+
+            $setupIntent = \Stripe\SetupIntent::create([
+                'customer' => $user->getStripeCustomerId(),
+                'payment_method_types' => ['card'],
+                'metadata' => [
+                    'order_id' => $orderId
+                ]
+            ]);
+
+            return $this->json([
+                'client_secret' => $setupIntent->client_secret,
+                'setup_intent_id' => $setupIntent->id,
+            ]);
+        } catch (\Exception $e) {
+            return $this->json(['error' => $e->getMessage()], 500);
+        }
     }
+
 }
