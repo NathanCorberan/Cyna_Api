@@ -27,7 +27,7 @@ use App\Application\State\Product\TopOrdersProductProvider;
     denormalizationContext: ['groups' => ['Product:write']],
     operations: [
         new GetCollection(security: "is_granted('PUBLIC_ACCESS')", provider: ProductProvider::class),
-        new Get(provider: ProductProvider::class),
+        new Get(security: "is_granted('PUBLIC_ACCESS')", provider: ProductProvider::class),
         new Post(security: "is_granted('ROLE_ADMIN')"),
         new Patch(security: "is_granted('ROLE_ADMIN')", uriTemplate: '/products/{id}'),
         new Delete(security: "is_granted('ROLE_ADMIN')", uriTemplate: '/products/{id}'), # ⛔️ PAS de processor ici
