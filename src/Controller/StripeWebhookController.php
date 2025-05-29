@@ -75,8 +75,8 @@ class StripeWebhookController extends AbstractController
                             $subscription = new Subscription();
                             $subscription->setUser($user);
                             $subscription->setSubscriptionType($subscriptionType);
-                            $subscription->setStartDate($startDate);
-                            $subscription->setEndDate($endDate);
+                            $subscription->setStartDate($startDate->format('Y-m-d'));
+                            $subscription->setEndDate($endDate->format('Y-m-d'));
                             $subscription->setStatus('available'); // <-- statut demandé
                             $em->persist($subscription);
                         }
