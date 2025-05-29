@@ -63,10 +63,9 @@ class Subscription
         return $this->end_date;
     }
 
-    public function setEndDate(string $end_date): static
+    public function setEndDate(?string $end_date): static
     {
         $this->end_date = $end_date;
-
         return $this;
     }
 
