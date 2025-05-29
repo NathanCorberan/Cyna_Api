@@ -128,7 +128,7 @@ class StripeWebhookController extends AbstractController
                         $subscription->setUser($user);
                         $subscription->setSubscriptionType($subscriptionType);
                         $subscription->setStartDate($startDate->format('Y-m-d'));
-                        if ($type === 'lifetime') {
+                        if ($type === 'lifetime' || $type === 'one_time') {
                             $subscription->setEndDate(null);
                         } else {
                             $subscription->setEndDate($endDate->format('Y-m-d'));
