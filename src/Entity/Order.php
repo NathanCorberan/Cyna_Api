@@ -77,6 +77,9 @@ class Order
     #[Groups(['Order:read', 'Order:write'])]
     private ?string $total_amount = null;
 
+    #[ORM\Column(type: 'boolean')]
+    private $webhookProcessed = false;
+
     #[ORM\ManyToOne(inversedBy: 'orders')]
     #[ORM\JoinColumn(nullable: true)] // optionnel
     #[Groups(['Order:read'])]
@@ -135,6 +138,16 @@ class Order
     public function setTotalAmount(string $total_amount): static
     {
         $this->total_amount = $total_amount;
+        return $this;
+    }
+
+    public function isWebhookProcessed(): bool
+    {
+        return $this->webhookProcessed;
+    }
+    public function setWebhookProcessed(bool $processed): self
+    {
+        $this->webhookProcessed = $processed;
         return $this;
     }
 

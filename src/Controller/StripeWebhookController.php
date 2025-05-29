@@ -45,45 +45,46 @@ class StripeWebhookController extends AbstractController
 
             $order = $orderRepository->find($orderId);
 
-            if ($order) {
-                $order->setStatus('payed');
-                $em->flush();
+            // **IDEMPOTENCE** : on ne traite que si pas déjà payée
+            if (!$order || $order->getStatus() === 'payed') {
+                return new Response('Order already processed', 200);
+            }
 
-                $user = $order->getUser();
-                if ($user) {
-                    foreach ($order->getOrderItems() as $item) {
-                        $subscriptionType = $item->getSubscriptionType();
-                        $quantity = $item->getQuantity();
+            $user = $order->getUser();
+            if ($user) {
+                foreach ($order->getOrderItems() as $item) {
+                    $subscriptionType = $item->getSubscriptionType();
+                    $quantity = $item->getQuantity();
 
-                        if (!$subscriptionType) {
-                            // Si l’OrderItem ne référence pas directement, tente de prendre le premier du produit
-                            $subscriptionType = $item->getProduct()->getSubscriptionTypes()->first() ?: null;
-                        }
-
-                        if (!$subscriptionType) {
-                            continue; // skip
-                        }
-
-                        // Calcule les dates en fonction du type
-                        $startDate = new \DateTime();
-                        $type = strtolower($subscriptionType->getType() ?? 'monthly');
-                        $endDate = (clone $startDate)->modify(
-                            $type === 'monthly' ? '+1 month' : ($type === 'yearly' ? '+1 year' : '+1 month')
-                        );
-
-                        for ($i = 0; $i < $quantity; $i++) {
-                            $subscription = new Subscription();
-                            $subscription->setUser($user);
-                            $subscription->setSubscriptionType($subscriptionType);
-                            $subscription->setStartDate($startDate);
-                            $subscription->setEndDate($endDate);
-                            $subscription->setStatus('available'); // <-- statut demandé
-                            $em->persist($subscription);
-                        }
+                    if (!$subscriptionType) {
+                        $subscriptionType = $item->getProduct()->getSubscriptionTypes()->first() ?: null;
                     }
-                    $em->flush();
+
+                    if (!$subscriptionType) {
+                        continue; // skip
+                    }
+
+                    // Calcule les dates en fonction du type
+                    $startDate = new \DateTime();
+                    $type = strtolower($subscriptionType->getType() ?? 'monthly');
+                    $endDate = (clone $startDate)->modify(
+                        $type === 'monthly' ? '+1 month' : ($type === 'yearly' ? '+1 year' : '+1 month')
+                    );
+
+                    for ($i = 0; $i < $quantity; $i++) {
+                        $subscription = new Subscription();
+                        $subscription->setUser($user);
+                        $subscription->setSubscriptionType($subscriptionType);
+                        $subscription->setStartDate($startDate->format('Y-m-d'));
+                        $subscription->setEndDate($endDate->format('Y-m-d'));
+                        $subscription->setStatus('available');
+                        $em->persist($subscription);
+                    }
                 }
             }
+            // On met la commande à payée **qu'après** avoir inséré les subscriptions
+            $order->setStatus('payed');
+            $em->flush();
         }
 
         // Paiement récurrent Stripe (abonnement via invoice)
@@ -98,42 +99,48 @@ class StripeWebhookController extends AbstractController
 
             $order = $orderRepository->find($orderId);
 
-            if ($order) {
-                $order->setStatus('payed');
-                $em->flush();
+            // **IDEMPOTENCE** : on ne traite que si pas déjà payée
+            if (!$order || $order->getStatus() === 'payed') {
+                return new Response('Order already processed', 200);
+            }
 
-                $user = $order->getUser();
-                if ($user) {
-                    foreach ($order->getOrderItems() as $item) {
-                        $subscriptionType = $item->getSubscriptionType();
-                        $quantity = $item->getQuantity();
+            $user = $order->getUser();
+            if ($user) {
+                foreach ($order->getOrderItems() as $item) {
+                    $subscriptionType = $item->getSubscriptionType();
+                    $quantity = $item->getQuantity();
 
-                        if (!$subscriptionType) {
-                            $subscriptionType = $item->getProduct()->getSubscriptionTypes()->first() ?: null;
-                        }
-                        if (!$subscriptionType) {
-                            continue;
-                        }
-
-                        $startDate = new \DateTime();
-                        $type = strtolower($subscriptionType->getType() ?? 'monthly');
-                        $endDate = (clone $startDate)->modify(
-                            $type === 'monthly' ? '+1 month' : ($type === 'yearly' ? '+1 year' : '+1 month')
-                        );
-
-                        for ($i = 0; $i < $quantity; $i++) {
-                            $subscription = new Subscription();
-                            $subscription->setUser($user);
-                            $subscription->setSubscriptionType($subscriptionType);
-                            $subscription->setStartDate($startDate);
-                            $subscription->setEndDate($endDate);
-                            $subscription->setStatus('available'); // <-- statut demandé
-                            $em->persist($subscription);
-                        }
+                    if (!$subscriptionType) {
+                        $subscriptionType = $item->getProduct()->getSubscriptionTypes()->first() ?: null;
                     }
-                    $em->flush();
+                    if (!$subscriptionType) {
+                        continue;
+                    }
+
+                    $startDate = new \DateTime();
+                    $type = strtolower($subscriptionType->getType() ?? 'monthly');
+                    $endDate = (clone $startDate)->modify(
+                        $type === 'monthly' ? '+1 month' : ($type === 'yearly' ? '+1 year' : '+1 month')
+                    );
+
+                    for ($i = 0; $i < $quantity; $i++) {
+                        $subscription = new Subscription();
+                        $subscription->setUser($user);
+                        $subscription->setSubscriptionType($subscriptionType);
+                        $subscription->setStartDate($startDate->format('Y-m-d'));
+                        if ($type === 'lifetime') {
+                            $subscription->setEndDate(null);
+                        } else {
+                            $subscription->setEndDate($endDate->format('Y-m-d'));
+                        }
+                        $subscription->setStatus('available');
+                        $em->persist($subscription);
+                    }
                 }
             }
+            // On met la commande à payée **qu'après** avoir inséré les subscriptions
+            $order->setStatus('payed');
+            $em->flush();
         }
 
         return new Response('Webhook handled', 200);
