@@ -32,7 +32,7 @@ RUN apk add --no-cache \
       autoconf g++ make \
       php8-bcmath \
   && docker-php-ext-configure gd --with-freetype --with-jpeg \
-  && docker-php-ext-install intl zip pdo_mysql pdo_pgsql opcache gd \
+  && docker-php-ext-install intl zip pdo_mysql pdo_pgsql opcache gd bcmath \
   && pecl install apcu \
   && docker-php-ext-enable apcu opcache \
   && apk del autoconf g++ make \
