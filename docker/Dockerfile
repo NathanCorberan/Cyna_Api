@@ -30,7 +30,6 @@ RUN apk add --no-cache \
       oniguruma-dev \
       libpng-dev libjpeg-turbo-dev freetype-dev \
       autoconf g++ make \
-      php8-bcmath \
   && docker-php-ext-configure gd --with-freetype --with-jpeg \
   && docker-php-ext-install intl zip pdo_mysql pdo_pgsql opcache gd bcmath \
   && pecl install apcu \
