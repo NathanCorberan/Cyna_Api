@@ -64,7 +64,6 @@ class StripeWebhookController extends AbstractController
                         continue; // skip
                     }
 
-                    // Calcule les dates en fonction du type
                     $startDate = new \DateTime();
                     $type = strtolower($subscriptionType->getType() ?? 'monthly');
                     $endDate = (clone $startDate)->modify(
@@ -76,7 +75,11 @@ class StripeWebhookController extends AbstractController
                         $subscription->setUser($user);
                         $subscription->setSubscriptionType($subscriptionType);
                         $subscription->setStartDate($startDate->format('Y-m-d'));
-                        $subscription->setEndDate($endDate->format('Y-m-d'));
+                        if ($type === 'lifetime') {
+                            $subscription->setEndDate(null);
+                        } else {
+                            $subscription->setEndDate($endDate->format('Y-m-d'));
+                        }
                         $subscription->setStatus('available');
                         $em->persist($subscription);
                     }
@@ -128,7 +131,7 @@ class StripeWebhookController extends AbstractController
                         $subscription->setUser($user);
                         $subscription->setSubscriptionType($subscriptionType);
                         $subscription->setStartDate($startDate->format('Y-m-d'));
-                        if ($type === 'lifetime' || $type === 'one_time') {
+                        if ($type === 'lifetime') {
                             $subscription->setEndDate(null);
                         } else {
                             $subscription->setEndDate($endDate->format('Y-m-d'));
@@ -138,7 +141,6 @@ class StripeWebhookController extends AbstractController
                     }
                 }
             }
-            // On met la commande à payée **qu'après** avoir inséré les subscriptions
             $order->setStatus('payed');
             $em->flush();
         }
