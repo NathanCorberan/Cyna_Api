@@ -16,7 +16,7 @@ class DecrementOrderItemQuantityProcessor implements ProcessorInterface
         private Security $security
     ) {}
 
-    public function process(mixed $data, Operation $operation, array $uriVariables = [], array $context = []): OrderItem
+    public function process(mixed $data, Operation $operation, array $uriVariables = [], array $context = []): ?OrderItem
     {
         $request = $context['request'] ?? null;
         $cartToken = $request?->headers->get('X-Cart-Token');
@@ -41,7 +41,13 @@ class DecrementOrderItemQuantityProcessor implements ProcessorInterface
         }
 
         if ($orderItem->getQuantity() <= 1) {
-            throw new \RuntimeException("Impossible de diminuer la quantité en dessous de 1.");
+            $this->em->remove($orderItem);
+            $this->em->flush();
+
+            $order->recalculateTotalAmount();
+            $this->em->flush();
+
+            return null; 
         }
 
         $orderItem->setQuantity($orderItem->getQuantity() - 1);
