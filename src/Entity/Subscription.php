@@ -27,7 +27,7 @@ class Subscription
     #[ORM\Column(length: 50)]
     private ?string $start_date = null;
 
-    #[ORM\Column(length: 50)]
+    #[ORM\Column(length: 50, nullable: true)]
     private ?string $end_date = null;
 
     #[ORM\Column(length: 50)]
@@ -54,7 +54,6 @@ class Subscription
     public function setStartDate(string $start_date): static
     {
         $this->start_date = $start_date;
-
         return $this;
     }
 
@@ -77,7 +76,6 @@ class Subscription
     public function setStatus(string $status): static
     {
         $this->status = $status;
-
         return $this;
     }
 
@@ -89,7 +87,6 @@ class Subscription
     public function setUser(?User $user): static
     {
         $this->user = $user;
-
         return $this;
     }
 
@@ -101,7 +98,6 @@ class Subscription
     public function setSubscriptionType(?SubscriptionType $subscriptionType): static
     {
         $this->subscriptionType = $subscriptionType;
-
         return $this;
     }
 }
