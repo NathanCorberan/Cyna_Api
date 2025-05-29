@@ -22,7 +22,7 @@ class StripeWebhookController extends AbstractController
         UserRepository $userRepository,
         OrderRepository $orderRepository,
         SubscriptionTypeRepository $subscriptionTypeRepository,
-        EntityManagerInterface $em // <-- ICI
+        EntityManagerInterface $em
     ) {
         Stripe::setApiKey($_ENV['STRIPE_SECRET_KEY']);
         $payload = $request->getContent();
@@ -57,6 +57,7 @@ class StripeWebhookController extends AbstractController
                     $subscriptionType = $item->getProduct()->getSubscriptionType();
                     $quantity = $item->getQuantity();
                     $startDate = (new \DateTime())->format('Y-m-d');
+                    // Si besoin, adapte pour un vrai DateTime
                     $endDate = (new \DateTime())->modify(
                         strtolower($subscriptionType->getType()) === 'monthly' ? '+1 month' : (
                             strtolower($subscriptionType->getType()) === 'yearly' ? '+1 year' : '+1 month'
