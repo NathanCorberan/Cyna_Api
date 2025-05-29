@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Repository\UserRepository;
 use App\Repository\OrderRepository;
+use App\Entity\Subscription;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Routing\Annotation\Route;
@@ -47,6 +48,41 @@ class StripeWebhookController extends AbstractController
             if ($order) {
                 $order->setStatus('payed');
                 $em->flush();
+
+                $user = $order->getUser();
+                if ($user) {
+                    foreach ($order->getOrderItems() as $item) {
+                        $subscriptionType = $item->getSubscriptionType();
+                        $quantity = $item->getQuantity();
+
+                        if (!$subscriptionType) {
+                            // Si l’OrderItem ne référence pas directement, tente de prendre le premier du produit
+                            $subscriptionType = $item->getProduct()->getSubscriptionTypes()->first() ?: null;
+                        }
+
+                        if (!$subscriptionType) {
+                            continue; // skip
+                        }
+
+                        // Calcule les dates en fonction du type
+                        $startDate = new \DateTime();
+                        $type = strtolower($subscriptionType->getType() ?? 'monthly');
+                        $endDate = (clone $startDate)->modify(
+                            $type === 'monthly' ? '+1 month' : ($type === 'yearly' ? '+1 year' : '+1 month')
+                        );
+
+                        for ($i = 0; $i < $quantity; $i++) {
+                            $subscription = new Subscription();
+                            $subscription->setUser($user);
+                            $subscription->setSubscriptionType($subscriptionType);
+                            $subscription->setStartDate($startDate);
+                            $subscription->setEndDate($endDate);
+                            $subscription->setStatus('available'); // <-- statut demandé
+                            $em->persist($subscription);
+                        }
+                    }
+                    $em->flush();
+                }
             }
         }
 
@@ -65,6 +101,38 @@ class StripeWebhookController extends AbstractController
             if ($order) {
                 $order->setStatus('payed');
                 $em->flush();
+
+                $user = $order->getUser();
+                if ($user) {
+                    foreach ($order->getOrderItems() as $item) {
+                        $subscriptionType = $item->getSubscriptionType();
+                        $quantity = $item->getQuantity();
+
+                        if (!$subscriptionType) {
+                            $subscriptionType = $item->getProduct()->getSubscriptionTypes()->first() ?: null;
+                        }
+                        if (!$subscriptionType) {
+                            continue;
+                        }
+
+                        $startDate = new \DateTime();
+                        $type = strtolower($subscriptionType->getType() ?? 'monthly');
+                        $endDate = (clone $startDate)->modify(
+                            $type === 'monthly' ? '+1 month' : ($type === 'yearly' ? '+1 year' : '+1 month')
+                        );
+
+                        for ($i = 0; $i < $quantity; $i++) {
+                            $subscription = new Subscription();
+                            $subscription->setUser($user);
+                            $subscription->setSubscriptionType($subscriptionType);
+                            $subscription->setStartDate($startDate);
+                            $subscription->setEndDate($endDate);
+                            $subscription->setStatus('available'); // <-- statut demandé
+                            $em->persist($subscription);
+                        }
+                    }
+                    $em->flush();
+                }
             }
         }
 
