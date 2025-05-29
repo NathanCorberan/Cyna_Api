@@ -1,18 +1,19 @@
 nelmio_cors:
     defaults:
         origin_regex: true
-        allow_origin: ['http://cyna.juku7704.odns.fr'] # ✅ Enlever le `/` final
+        allow_origin: ['http://cyna.juku7704.odns.fr']
         allow_methods: ['GET', 'OPTIONS', 'POST', 'PUT', 'PATCH', 'DELETE']
-        allow_headers: ['Content-Type', 'Authorization']
-        expose_headers: ['Link']
+        allow_headers: ['Content-Type', 'Authorization', 'X-Cart-Token']
+        expose_headers: ['Link', 'X-Cart-Token']
         max_age: 3600
-        allow_credentials: true 
+        allow_credentials: true
 
     paths:
-        '^/api/': 
+        '^/api/':
             allow_origin: ['http://cyna.juku7704.odns.fr','^https?://(localhost|127\.0\.0\.1)(:[0-9]+)?$']
             allow_methods: ['GET', 'OPTIONS', 'POST', 'PUT', 'DELETE', 'PATCH']
-            allow_headers: ['Content-Type', 'Authorization']
+            allow_headers: ['Content-Type', 'Authorization', 'X-Cart-Token']
+            expose_headers: ['Link', 'X-Cart-Token']
             allow_credentials: true
             max_age: 3600
         '^/': null
