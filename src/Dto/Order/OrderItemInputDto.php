@@ -14,4 +14,7 @@ final class OrderItemInputDto
     #[ApiProperty(example: 2)]
     #[Groups(['OrderItem:write'])]
     public ?int $quantity = null;
+
+    #[Groups(['OrderItem:write'])]
+    public ?int $subscription_type_id = null; // 👈 Ajouté
 }

@@ -50,14 +50,27 @@ class OrderItemDataPersister implements ProcessorInterface
         /** @var \App\Entity\Order $cart */
         $cart = $this->createCartProcessor->process($cartInput, $operation, $uriVariables, $context);
 
-        $subscriptionType = $this->subscriptionTypeRepository->findOneBy(['product' => $product]);
-        if (!$subscriptionType) {
-            throw new NotFoundHttpException("No subscription type found for product ID {$data->product_id}.");
+        // Gestion du SubscriptionType via l'ID passé, ou fallback sur le premier trouvé
+        if ($data->subscription_type_id) {
+            $subscriptionType = $this->subscriptionTypeRepository->find($data->subscription_type_id);
+            if (!$subscriptionType) {
+                throw new NotFoundHttpException("SubscriptionType with ID {$data->subscription_type_id} not found.");
+            }
+            if ($subscriptionType->getProduct()->getId() !== $data->product_id) {
+                throw new \InvalidArgumentException("SubscriptionType does not belong to the specified product.");
+            }
+        } else {
+            $subscriptionType = $this->subscriptionTypeRepository->findOneBy(['product' => $product]);
+            if (!$subscriptionType) {
+                throw new NotFoundHttpException("No subscription type found for product ID {$data->product_id}.");
+            }
         }
 
+        // Recherche d'un OrderItem existant dans ce panier avec ce produit ET ce subscriptionType
         $existingItem = $this->orderItemRepository->findOneBy([
             'order' => $cart,
-            'product' => $product
+            'product' => $product,
+            'subscriptionType' => $subscriptionType
         ]);
 
         if ($existingItem) {
@@ -67,30 +80,31 @@ class OrderItemDataPersister implements ProcessorInterface
                 $existingItem->setUnitPrice($subscriptionType->getPrice());
             }
 
+            $existingItem->setSubscriptionType($subscriptionType);
+
             $cart->recalculateTotalAmount();
             $this->entityManager->flush();
 
             return $existingItem;
         }
 
-        // 👉 Nouveau OrderItem
+        // Nouveau OrderItem
         $orderItem = new OrderItem();
         $orderItem->setOrder($cart);
         $orderItem->setProduct($product);
         $orderItem->setUnitPrice($subscriptionType->getPrice());
         $orderItem->setQuantity($data->quantity);
+        $orderItem->setSubscriptionType($subscriptionType);
 
         $this->entityManager->persist($orderItem);
 
-        // ✅ On ajoute manuellement l’item dans la collection (pour que le total soit juste)
+        // Ajout dans la collection du panier
         $cart->addOrderItem($orderItem);
 
-        // ✅ Maintenant, recalcul fonctionne correctement
         $cart->recalculateTotalAmount();
 
         $this->entityManager->flush();
 
         return $orderItem;
     }
-
 }
