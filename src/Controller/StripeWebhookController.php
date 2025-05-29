@@ -67,17 +67,25 @@ class StripeWebhookController extends AbstractController
                         // Calcule les dates en fonction du type
                         $startDate = new \DateTime();
                         $type = strtolower($subscriptionType->getType() ?? 'monthly');
-                        $endDate = (clone $startDate)->modify(
-                            $type === 'monthly' ? '+1 month' : ($type === 'yearly' ? '+1 year' : '+1 month')
-                        );
 
                         for ($i = 0; $i < $quantity; $i++) {
                             $subscription = new Subscription();
                             $subscription->setUser($user);
                             $subscription->setSubscriptionType($subscriptionType);
                             $subscription->setStartDate($startDate->format('Y-m-d'));
-                            $subscription->setEndDate($endDate->format('Y-m-d'));
-                            $subscription->setStatus('available'); // <-- statut demandé
+
+                            if ($type === 'lifetime') {
+                                $subscription->setEndDate(null);
+                            } else {
+                                $endDate = (clone $startDate)->modify(
+                                    $type === 'monthly' ? '+1 month' : (
+                                        $type === 'yearly' ? '+1 year' : '+1 month'
+                                    )
+                                );
+                                $subscription->setEndDate($endDate->format('Y-m-d'));
+                            }
+
+                            $subscription->setStatus('available');
                             $em->persist($subscription);
                         }
                     }
@@ -117,17 +125,25 @@ class StripeWebhookController extends AbstractController
 
                         $startDate = new \DateTime();
                         $type = strtolower($subscriptionType->getType() ?? 'monthly');
-                        $endDate = (clone $startDate)->modify(
-                            $type === 'monthly' ? '+1 month' : ($type === 'yearly' ? '+1 year' : '+1 month')
-                        );
 
                         for ($i = 0; $i < $quantity; $i++) {
                             $subscription = new Subscription();
                             $subscription->setUser($user);
                             $subscription->setSubscriptionType($subscriptionType);
-                            $subscription->setStartDate($startDate);
-                            $subscription->setEndDate($endDate);
-                            $subscription->setStatus('available'); // <-- statut demandé
+                            $subscription->setStartDate($startDate->format('Y-m-d'));
+
+                            if ($type === 'lifetime') {
+                                $subscription->setEndDate(null);
+                            } else {
+                                $endDate = (clone $startDate)->modify(
+                                    $type === 'monthly' ? '+1 month' : (
+                                        $type === 'yearly' ? '+1 year' : '+1 month'
+                                    )
+                                );
+                                $subscription->setEndDate($endDate->format('Y-m-d'));
+                            }
+
+                            $subscription->setStatus('available');
                             $em->persist($subscription);
                         }
                     }
