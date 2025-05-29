@@ -33,59 +33,40 @@ class StripeWebhookController extends AbstractController
             return new Response('Webhook Error: ' . $e->getMessage(), 400);
         }
 
-        // Paiement classique Stripe (paiement one-time)
+        // 1. Paiement unique (one_time/lifetime)
         if ($event->type === 'payment_intent.succeeded') {
             $intent = $event->data->object;
-            $orderId = $intent->metadata->order_id ?? null;
+            $metadata = (array) ($intent->metadata ?? []);
+            $orderId = $metadata['order_id'] ?? null;
+            $type = strtolower($metadata['type'] ?? 'one_time');
 
             if (!$orderId) {
                 return new Response('Missing data', 400);
             }
-
             $order = $orderRepository->find($orderId);
-
-            if (!$order) {
-                return new Response('Order not found', 404);
-            }
-
-            // Protection anti-doublons
-            if ($order->getStatus() === 'payed') {
-                return new Response('Order already payed', 200);
-            }
-
-            $order->setStatus('payed');
-            $em->flush();
+            if (!$order) return new Response('Order not found', 404);
+            if ($order->getStatus() === 'payed') return new Response('Order already payed', 200);
 
             $user = $order->getUser();
             if ($user) {
                 foreach ($order->getOrderItems() as $item) {
-                    $subscriptionType = $item->getSubscriptionType();
+                    $subscriptionType = $item->getSubscriptionType() ?: $item->getProduct()->getSubscriptionTypes()->first() ?: null;
                     $quantity = $item->getQuantity();
 
-                    if (!$subscriptionType) {
-                        // Si l’OrderItem ne référence pas directement, tente de prendre le premier du produit
-                        $subscriptionType = $item->getProduct()->getSubscriptionTypes()->first() ?: null;
-                    }
-
-                    if (!$subscriptionType) {
-                        continue; // skip
-                    }
+                    if (!$subscriptionType) continue;
 
                     $startDate = new \DateTime();
-                    $type = strtolower($subscriptionType->getType() ?? 'monthly');
-
                     for ($i = 0; $i < $quantity; $i++) {
                         $subscription = new Subscription();
                         $subscription->setUser($user);
                         $subscription->setSubscriptionType($subscriptionType);
                         $subscription->setStartDate($startDate->format('Y-m-d'));
-                        if ($type === 'lifetime') {
+                        if ($type === 'lifetime' || $type === 'one_time') {
                             $subscription->setEndDate(null);
                         } else {
                             $endDate = (clone $startDate)->modify(
-                                $type === 'monthly' ? '+1 month' : (
-                                    $type === 'yearly' ? '+1 year' : '+1 month'
-                                )
+                                $type === 'monthly' ? '+1 month' :
+                                ($type === 'yearly' ? '+1 year' : '+1 month')
                             );
                             $subscription->setEndDate($endDate->format('Y-m-d'));
                         }
@@ -93,61 +74,54 @@ class StripeWebhookController extends AbstractController
                         $em->persist($subscription);
                     }
                 }
+                $order->setStatus('payed');
                 $em->flush();
             }
         }
 
-        // Paiement récurrent Stripe (abonnement via invoice)
+        // 2. Abonnement Stripe via invoice (monthly/yearly)
         elseif ($event->type === 'invoice.paid') {
             $invoice = $event->data->object;
-            $orderId = $invoice->lines->data[0]->metadata->order_id ?? $invoice->metadata->order_id ?? null;
+            // Méthode STRIPE qui change souvent : tu checkes dans plusieurs endroits
+            $metadata = [];
+            // 1. Stripe met le metadata sur invoice direct
+            if (isset($invoice->metadata)) {
+                $metadata = (array) $invoice->metadata;
+            }
+            // 2. ... ou sur la première line (produit)
+            if (empty($metadata) && isset($invoice->lines->data[0]->metadata)) {
+                $metadata = (array) $invoice->lines->data[0]->metadata;
+            }
+            $orderId = $metadata['order_id'] ?? null;
+            $type = strtolower($metadata['type'] ?? 'monthly'); // fallback sur monthly
 
             if (!$orderId) {
                 return new Response('Missing data', 400);
             }
-
             $order = $orderRepository->find($orderId);
-
-            if (!$order) {
-                return new Response('Order not found', 404);
-            }
-
-            // Protection anti-doublons
-            if ($order->getStatus() === 'payed') {
-                return new Response('Order already payed', 200);
-            }
-
-            $order->setStatus('payed');
-            $em->flush();
+            if (!$order) return new Response('Order not found', 404);
+            if ($order->getStatus() === 'payed') return new Response('Order already payed', 200);
 
             $user = $order->getUser();
             if ($user) {
                 foreach ($order->getOrderItems() as $item) {
-                    $subscriptionType = $item->getSubscriptionType();
+                    $subscriptionType = $item->getSubscriptionType() ?: $item->getProduct()->getSubscriptionTypes()->first() ?: null;
                     $quantity = $item->getQuantity();
 
-                    if (!$subscriptionType) {
-                        $subscriptionType = $item->getProduct()->getSubscriptionTypes()->first() ?: null;
-                    }
-                    if (!$subscriptionType) {
-                        continue;
-                    }
+                    if (!$subscriptionType) continue;
 
                     $startDate = new \DateTime();
-                    $type = strtolower($subscriptionType->getType() ?? 'monthly');
-
                     for ($i = 0; $i < $quantity; $i++) {
                         $subscription = new Subscription();
                         $subscription->setUser($user);
                         $subscription->setSubscriptionType($subscriptionType);
                         $subscription->setStartDate($startDate->format('Y-m-d'));
-                        if ($type === 'lifetime') {
+                        if ($type === 'lifetime' || $type === 'one_time') {
                             $subscription->setEndDate(null);
                         } else {
                             $endDate = (clone $startDate)->modify(
-                                $type === 'monthly' ? '+1 month' : (
-                                    $type === 'yearly' ? '+1 year' : '+1 month'
-                                )
+                                $type === 'monthly' ? '+1 month' :
+                                ($type === 'yearly' ? '+1 year' : '+1 month')
                             );
                             $subscription->setEndDate($endDate->format('Y-m-d'));
                         }
@@ -155,6 +129,7 @@ class StripeWebhookController extends AbstractController
                         $em->persist($subscription);
                     }
                 }
+                $order->setStatus('payed');
                 $em->flush();
             }
         }
