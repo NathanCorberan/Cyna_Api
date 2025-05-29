@@ -7,6 +7,7 @@ use App\Repository\OrderRepository;
 use App\Repository\SubscriptionTypeRepository;
 use App\Entity\Subscription;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -20,7 +21,8 @@ class StripeWebhookController extends AbstractController
         Request $request,
         UserRepository $userRepository,
         OrderRepository $orderRepository,
-        SubscriptionTypeRepository $subscriptionTypeRepository
+        SubscriptionTypeRepository $subscriptionTypeRepository,
+        EntityManagerInterface $em // <-- ICI
     ) {
         Stripe::setApiKey($_ENV['STRIPE_SECRET_KEY']);
         $payload = $request->getContent();
@@ -32,8 +34,6 @@ class StripeWebhookController extends AbstractController
         } catch (\Exception $e) {
             return new Response('Webhook Error: ' . $e->getMessage(), 400);
         }
-
-        $em = $this->getDoctrine()->getManager();
 
         // --- Pour un paiement unique (one_time)
         if ($event->type === 'payment_intent.succeeded') {
@@ -57,7 +57,6 @@ class StripeWebhookController extends AbstractController
                     $subscriptionType = $item->getProduct()->getSubscriptionType();
                     $quantity = $item->getQuantity();
                     $startDate = (new \DateTime())->format('Y-m-d');
-                    // Si besoin, adapte pour un vrai DateTime
                     $endDate = (new \DateTime())->modify(
                         strtolower($subscriptionType->getType()) === 'monthly' ? '+1 month' : (
                             strtolower($subscriptionType->getType()) === 'yearly' ? '+1 year' : '+1 month'
