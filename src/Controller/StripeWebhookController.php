@@ -33,43 +33,35 @@ class StripeWebhookController extends AbstractController
             return new Response('Webhook Error: ' . $e->getMessage(), 400);
         }
 
-        // 1. Paiement unique (one_time/lifetime)
-        if ($event->type === 'payment_intent.succeeded') {
+        // === 1. Paiement unique (one_time/lifetime via payment_intent) ===
+        if (isset($event->data->object->object) && $event->data->object->object === 'payment_intent') {
             $intent = $event->data->object;
             $metadata = (array) ($intent->metadata ?? []);
             $orderId = $metadata['order_id'] ?? null;
-            $type = strtolower($metadata['type'] ?? 'one_time');
 
             if (!$orderId) {
-                return new Response('Missing data', 400);
+                return new Response('Missing order_id', 400);
             }
+
             $order = $orderRepository->find($orderId);
             if (!$order) return new Response('Order not found', 404);
-            if ($order->getStatus() === 'payed') return new Response('Order already payed', 200);
 
             $user = $order->getUser();
             if ($user) {
                 foreach ($order->getOrderItems() as $item) {
                     $subscriptionType = $item->getSubscriptionType() ?: $item->getProduct()->getSubscriptionTypes()->first() ?: null;
-                    $quantity = $item->getQuantity();
-
                     if (!$subscriptionType) continue;
 
-                    $startDate = new \DateTime();
+                    $type = strtolower($subscriptionType->getType() ?? '');
+                    if ($type !== 'lifetime' && $type !== 'one_time') continue;
+
+                    $quantity = $item->getQuantity() ?? 1;
                     for ($i = 0; $i < $quantity; $i++) {
                         $subscription = new Subscription();
                         $subscription->setUser($user);
                         $subscription->setSubscriptionType($subscriptionType);
-                        $subscription->setStartDate($startDate->format('Y-m-d'));
-                        if ($type === 'lifetime' || $type === 'one_time') {
-                            $subscription->setEndDate(null);
-                        } else {
-                            $endDate = (clone $startDate)->modify(
-                                $type === 'monthly' ? '+1 month' :
-                                ($type === 'yearly' ? '+1 year' : '+1 month')
-                            );
-                            $subscription->setEndDate($endDate->format('Y-m-d'));
-                        }
+                        $subscription->setStartDate((new \DateTime())->format('Y-m-d'));
+                        $subscription->setEndDate(null);
                         $subscription->setStatus('available');
                         $em->persist($subscription);
                     }
@@ -79,52 +71,42 @@ class StripeWebhookController extends AbstractController
             }
         }
 
-        // 2. Abonnement Stripe via invoice (monthly/yearly)
-        elseif ($event->type === 'invoice.paid') {
-            $invoice = $event->data->object;
-            // Méthode STRIPE qui change souvent : tu checkes dans plusieurs endroits
-            $metadata = [];
-            // 1. Stripe met le metadata sur invoice direct
-            if (isset($invoice->metadata)) {
-                $metadata = (array) $invoice->metadata;
-            }
-            // 2. ... ou sur la première line (produit)
-            if (empty($metadata) && isset($invoice->lines->data[0]->metadata)) {
-                $metadata = (array) $invoice->lines->data[0]->metadata;
-            }
+        // === 2. Abonnement Stripe (subscription) ===
+        elseif (isset($event->data->object->object) && $event->data->object->object === 'subscription') {
+            $subscriptionStripe = $event->data->object;
+            $metadata = (array) ($subscriptionStripe->metadata ?? []);
             $orderId = $metadata['order_id'] ?? null;
-            $type = strtolower($metadata['type'] ?? 'monthly'); // fallback sur monthly
+            $type = strtolower($metadata['type'] ?? 'monthly');
 
             if (!$orderId) {
-                return new Response('Missing data', 400);
+                return new Response('Missing order_id', 400);
             }
             $order = $orderRepository->find($orderId);
             if (!$order) return new Response('Order not found', 404);
-            if ($order->getStatus() === 'payed') return new Response('Order already payed', 200);
 
             $user = $order->getUser();
             if ($user) {
                 foreach ($order->getOrderItems() as $item) {
                     $subscriptionType = $item->getSubscriptionType() ?: $item->getProduct()->getSubscriptionTypes()->first() ?: null;
-                    $quantity = $item->getQuantity();
-
                     if (!$subscriptionType) continue;
 
+                    $stype = strtolower($subscriptionType->getType() ?? 'monthly');
+                    if ($stype === 'lifetime' || $stype === 'one_time') continue;
+
+                    $quantity = $item->getQuantity() ?? 1;
                     $startDate = new \DateTime();
+                    $endDate = (clone $startDate)->modify(
+                        $stype === 'monthly' ? '+1 month' : (
+                            $stype === 'yearly' ? '+1 year' : '+1 month'
+                        )
+                    );
+
                     for ($i = 0; $i < $quantity; $i++) {
                         $subscription = new Subscription();
                         $subscription->setUser($user);
                         $subscription->setSubscriptionType($subscriptionType);
                         $subscription->setStartDate($startDate->format('Y-m-d'));
-                        if ($type === 'lifetime' || $type === 'one_time') {
-                            $subscription->setEndDate(null);
-                        } else {
-                            $endDate = (clone $startDate)->modify(
-                                $type === 'monthly' ? '+1 month' :
-                                ($type === 'yearly' ? '+1 year' : '+1 month')
-                            );
-                            $subscription->setEndDate($endDate->format('Y-m-d'));
-                        }
+                        $subscription->setEndDate($endDate->format('Y-m-d'));
                         $subscription->setStatus('available');
                         $em->persist($subscription);
                     }
