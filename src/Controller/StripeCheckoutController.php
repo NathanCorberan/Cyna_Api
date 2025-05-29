@@ -35,7 +35,6 @@ class StripeCheckoutController extends AbstractController
             'one_time' => [],
             'monthly'  => [],
             'yearly'   => [],
-            'lifetime' => [],
         ];
 
         foreach ($order->getOrderItems() as $item) {
@@ -78,53 +77,81 @@ class StripeCheckoutController extends AbstractController
             ];
         }
 
-        // --- SUBSCRIPTIONS (Monthly, Yearly, Lifetime) ---
-        foreach (['monthly', 'yearly', 'lifetime'] as $subType) {
-            if (count($byType[$subType]) > 0) {
-                $items = [];
-                foreach ($byType[$subType] as $item) {
-                    $subscriptionType = $item->getSubscriptionType();
-                    if ($subscriptionType) {
-                        $stripePriceId = $subscriptionType->getStripePriceId();
-                        $items[] = [
-                            'price'    => $stripePriceId,
-                            'quantity' => $item->getQuantity()
-                        ];
-                    }
-                }
-                if (!empty($items)) {
-                    // Création de la subscription sans l'id dans metadata
-                    $subscription = Subscription::create([
-                        'customer' => $customerId,
-                        'items' => $items,
-                        'default_payment_method' => $paymentMethodId,
-                        'metadata' => [
-                            'order_id' => $orderId,
-                            'type'     => $subType
-                        ],
-                        'expand' => ['latest_invoice.confirmation_secret'],
-                    ]);
-                    // Mise à jour pour rajouter l'id dans les metadata
-                    Subscription::update($subscription->id, [
-                        'metadata' => [
-                            'order_id' => $orderId,
-                            'type'     => $subType,
-                            'subscription_id' => $subscription->id
-                        ]
-                    ]);
-                    $clientSecret = null;
-                    if (
-                        isset($subscription->latest_invoice) &&
-                        isset($subscription->latest_invoice->confirmation_secret)
-                    ) {
-                        $clientSecret = $subscription->latest_invoice->confirmation_secret->client_secret;
-                    }
-                    $stripeResults[$subType] = [
-                        'subscription_id' => $subscription->id,
-                        'client_secret'   => $clientSecret,
-                        'status'          => $subscription->status
+        // --- MONTHLY SUBSCRIPTIONS ---
+        if (count($byType['monthly']) > 0) {
+            $items = [];
+            foreach ($byType['monthly'] as $item) {
+                $subscriptionType = $item->getSubscriptionType();
+                if ($subscriptionType) {
+                    $stripePriceId = $subscriptionType->getStripePriceId();
+                    $items[] = [
+                        'price'    => $stripePriceId,
+                        'quantity' => $item->getQuantity()
                     ];
                 }
+            }
+            if (!empty($items)) {
+                $subscription = Subscription::create([
+                    'customer' => $customerId,
+                    'items' => $items,
+                    'default_payment_method' => $paymentMethodId,
+                    'metadata' => [
+                        'order_id' => $orderId,
+                        'type'     => 'monthly'
+                    ],
+                    'expand' => ['latest_invoice.confirmation_secret'],
+                ]);
+                $clientSecret = null;
+                if (
+                    isset($subscription->latest_invoice) &&
+                    isset($subscription->latest_invoice->confirmation_secret)
+                ) {
+                    $clientSecret = $subscription->latest_invoice->confirmation_secret->client_secret;
+                }
+                $stripeResults['monthly'] = [
+                    'subscription_id' => $subscription->id,
+                    'client_secret'   => $clientSecret,
+                    'status'          => $subscription->status
+                ];
+            }
+        }
+
+        // --- YEARLY SUBSCRIPTIONS ---
+        if (count($byType['yearly']) > 0) {
+            $items = [];
+            foreach ($byType['yearly'] as $item) {
+                $subscriptionType = $item->getSubscriptionType();
+                if ($subscriptionType) {
+                    $stripePriceId = $subscriptionType->getStripePriceId();
+                    $items[] = [
+                        'price'    => $stripePriceId,
+                        'quantity' => $item->getQuantity()
+                    ];
+                }
+            }
+            if (!empty($items)) {
+                $subscription = Subscription::create([
+                    'customer' => $customerId,
+                    'items' => $items,
+                    'default_payment_method' => $paymentMethodId,
+                    'metadata' => [
+                        'order_id' => $orderId,
+                        'type'     => 'yearly'
+                    ],
+                    'expand' => ['latest_invoice.confirmation_secret'],
+                ]);
+                $clientSecret = null;
+                if (
+                    isset($subscription->latest_invoice) &&
+                    isset($subscription->latest_invoice->confirmation_secret)
+                ) {
+                    $clientSecret = $subscription->latest_invoice->confirmation_secret->client_secret;
+                }
+                $stripeResults['yearly'] = [
+                    'subscription_id' => $subscription->id,
+                    'client_secret'   => $clientSecret,
+                    'status'          => $subscription->status
+                ];
             }
         }
 
