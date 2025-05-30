@@ -16,6 +16,26 @@ class SubscriptionRepository extends ServiceEntityRepository
         parent::__construct($registry, Subscription::class);
     }
 
+    public function findSubByMe(int $userId): array
+    {
+        // QueryBuilder pour joindre toutes les tables nécessaires
+        $qb = $this->createQueryBuilder('s')
+            ->select('s', 'st', 'p', 'pi', 'pl')
+            ->join('s.subscriptionType', 'st')
+            ->join('st.product', 'p')
+            ->leftJoin('p.productImages', 'pi')
+            ->leftJoin('p.productLangages', 'pl', 'WITH', 'pl.code = :lang') // On suppose code = 'FR'
+            ->where('s.user = :userId')
+            ->andWhere('s.status = :status')
+            ->setParameter('userId', $userId)
+            ->setParameter('status', 'available')
+            ->setParameter('lang', 'FR');
+
+        return $qb->getQuery()->getResult();
+    }
+
+
+
 //    /**
 //     * @return Subscription[] Returns an array of Subscription objects
 //     */

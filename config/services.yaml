@@ -82,3 +82,8 @@ services:
     App\OpenApi\OpenApiFactory:
         decorates: 'api_platform.openapi.factory'
         arguments: [ '@App\OpenApi\OpenApiFactory.inner' ]
+    
+    App\Application\State\Subscription\MySubProvider:
+        arguments:
+            $security: '@security.helper'
+            $subscriptionRepository: '@App\Repository\SubscriptionRepository'

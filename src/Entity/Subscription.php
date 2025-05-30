@@ -4,18 +4,78 @@ namespace App\Entity;
 
 use App\Repository\SubscriptionRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Bundle\SecurityBundle\Security;
 
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Post;
 use ApiPlatform\Metadata\Patch;
 use ApiPlatform\Metadata\Delete;
-use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\OpenApi\Model\Operation;
+use ApiPlatform\OpenApi\Model\RequestBody;
+use ApiPlatform\Metadata\Delete as DeleteOperation;
+use ArrayObject;
 use Symfony\Component\Serializer\Annotation\Groups;
+use App\Dto\Subscription\MySubOutputDto;
+use App\Application\State\Subscription\MySubProvider;
+
 
 #[ORM\Entity(repositoryClass: SubscriptionRepository::class)]
-#[ApiResource(    
+#[ApiResource(
     security: "is_granted('ROLE_ADMIN')",
+    normalizationContext: ['groups' => ['Subscription:read']],
+    denormalizationContext: ['groups' => ['Subscription:write']],
+    operations: [
+        new GetCollection(
+            openapi: new Operation(
+                summary: 'Lister toutes les abonnements',
+                description: 'Récupère la liste complète des abonnements (Subscription) enregistrés.',
+                tags: ['Subscription']
+            )
+        ),
+        new Get(
+            openapi: new Operation(
+                summary: 'Récupérer un abonnement',
+                description: 'Récupère les détails d’un abonnement (Subscription) spécifique via son identifiant.',
+                tags: ['Subscription']
+            )
+        ),
+        new GetCollection(
+            uriTemplate: '/my-sub',
+            output: MySubOutputDto::class,
+            provider: MySubProvider::class,
+            normalizationContext: ['groups' => ['my_sub:read']],
+            security: "is_granted('IS_AUTHENTICATED_FULLY')",
+            openapi: new \ApiPlatform\OpenApi\Model\Operation(
+                summary: 'Liste mes abonnements actifs',
+                tags: ['Subscription']
+            )
+        ),
+
+        new Post(
+            openapi: new Operation(
+                summary: 'Créer un abonnement',
+                description: 'Crée un nouvel abonnement (Subscription) pour un utilisateur.',
+                tags: ['Subscription']
+            )
+        ),
+        new Patch(
+            openapi: new Operation(
+                summary: 'Modifier un abonnement',
+                description: 'Modifie les propriétés d’un abonnement existant (date, statut, etc).',
+                tags: ['Subscription']
+            )
+        ),
+        new DeleteOperation(
+            openapi: new Operation(
+                summary: 'Supprimer un abonnement',
+                description: 'Supprime un abonnement (Subscription) spécifique.',
+                tags: ['Subscription']
+            )
+        ),
+        
+    ]
 )]
 class Subscription
 {
