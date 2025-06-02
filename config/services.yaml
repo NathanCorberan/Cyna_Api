@@ -87,3 +87,13 @@ services:
         arguments:
             $security: '@security.helper'
             $subscriptionRepository: '@App\Repository\SubscriptionRepository'
+
+    App\Service\AzureTranslateService:
+        arguments:
+            $endpoint: '%env(AZURE_TRANSLATOR_ENDPOINT)%'
+            $subscriptionKey: '%env(AZURE_TRANSLATOR_KEY)%'
+            $region: '%env(AZURE_TRANSLATOR_REGION)%'
+    
+    App\Application\State\Category\CategoryWithImageAndTranslationProcessor:
+        arguments:
+            $projectDir: '%kernel.project_dir%'

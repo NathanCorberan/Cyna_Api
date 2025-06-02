@@ -18,6 +18,7 @@ use Symfony\Component\Serializer\Annotation\Groups;
 use App\Entity\Product;
 use App\Application\State\Category\CategoryProductsProvider;
 use App\Dto\Product\ProductDetailsOutputDto;
+use App\Application\State\Category\CategoryWithImageAndTranslationProcessor;
 
 
 #[ORM\Entity(repositoryClass: CategoryRepository::class)]
@@ -28,7 +29,12 @@ use App\Dto\Product\ProductDetailsOutputDto;
     operations: [
         new GetCollection(),
         new Get(),
-        new Post(security: "is_granted('ROLE_ADMIN')"), // 🔒 Admin seulement
+         new Post(
+            processor: CategoryWithImageAndTranslationProcessor::class,
+            security: "is_granted('ROLE_ADMIN')",
+            input: false,
+            inputFormats: ['multipart' => ['multipart/form-data']],
+        ),
         new Patch(security: "is_granted('ROLE_ADMIN')"), // 🔒 Admin seulement
         new Delete(security: "is_granted('ROLE_ADMIN')"), // 🔒 Admin seulement
         new GetCollection(
@@ -70,10 +76,17 @@ class Category
     #[ORM\OneToMany(targetEntity: Product::class, mappedBy: 'category')]
     private Collection $products;
 
+    /**
+     * @var Collection<int, CategoryLanguage>
+     */
+    #[ORM\OneToMany(targetEntity: CategoryLanguage::class, mappedBy: 'categoryId')]
+    private Collection $categoryLanguages;
+
     public function __construct()
     {
         $this->categoryImages = new ArrayCollection();
         $this->products = new ArrayCollection();
+        $this->categoryLanguages = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -180,5 +193,35 @@ class Category
             return $image->getImageLink();
         }
         return null;
+    }
+
+    /**
+     * @return Collection<int, CategoryLanguage>
+     */
+    public function getCategoryLanguages(): Collection
+    {
+        return $this->categoryLanguages;
+    }
+
+    public function addCategoryLanguage(CategoryLanguage $categoryLanguage): static
+    {
+        if (!$this->categoryLanguages->contains($categoryLanguage)) {
+            $this->categoryLanguages->add($categoryLanguage);
+            $categoryLanguage->setCategoryId($this);
+        }
+
+        return $this;
+    }
+
+    public function removeCategoryLanguage(CategoryLanguage $categoryLanguage): static
+    {
+        if ($this->categoryLanguages->removeElement($categoryLanguage)) {
+            // set the owning side to null (unless already changed)
+            if ($categoryLanguage->getCategoryId() === $this) {
+                $categoryLanguage->setCategoryId(null);
+            }
+        }
+
+        return $this;
     }
 }
