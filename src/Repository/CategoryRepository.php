@@ -40,4 +40,16 @@ class CategoryRepository extends ServiceEntityRepository
 //            ->getOneOrNullResult()
 //        ;
 //    }
+
+    public function findAllCategories(): array
+    {
+        $qb = $this->createQueryBuilder('c')
+            ->leftJoin('c.categoryLanguages', 'cl')
+            ->addSelect('cl')
+            ->leftJoin('c.categoryImages', 'ci')
+            ->addSelect('ci')
+            ->orderBy('c.category_order', 'ASC');
+
+        return $qb->getQuery()->getResult();
+    }
 }

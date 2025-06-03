@@ -19,6 +19,7 @@ use App\Entity\Product;
 use App\Application\State\Category\CategoryProductsProvider;
 use App\Dto\Product\ProductDetailsOutputDto;
 use App\Application\State\Category\CategoryWithImageAndTranslationProcessor;
+use App\Application\State\Category\CategoryCollectionProvider;
 
 
 #[ORM\Entity(repositoryClass: CategoryRepository::class)]
@@ -27,9 +28,11 @@ use App\Application\State\Category\CategoryWithImageAndTranslationProcessor;
     denormalizationContext: ['groups' => ['category:write']],
     order: ['category_order' => 'ASC'],
     operations: [
-        new GetCollection(),
+        new GetCollection(
+            provider: CategoryCollectionProvider::class
+        ),
         new Get(),
-         new Post(
+        new Post(
             processor: CategoryWithImageAndTranslationProcessor::class,
             security: "is_granted('ROLE_ADMIN')",
             input: false,
@@ -80,6 +83,7 @@ class Category
      * @var Collection<int, CategoryLanguage>
      */
     #[ORM\OneToMany(targetEntity: CategoryLanguage::class, mappedBy: 'categoryId')]
+    #[Groups(['category:read'])]
     private Collection $categoryLanguages;
 
     public function __construct()
