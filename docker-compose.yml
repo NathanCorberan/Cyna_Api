@@ -8,6 +8,8 @@ services:
       #- APP_ENV=prod
     depends_on:
       - database
+    volumes:
+      - ./public/assets/images/categories:/var/www/public/assets/images/categories
 
   nginx:
     image: nginx:alpine

@@ -51,7 +51,7 @@ class CategoryWithImageAndTranslationProcessor implements ProcessorInterface
 
             $categoryImage = new CategoryImage();
             $categoryImage->setName($safeName);
-            $categoryImage->setImageLink('/assets/images/categories/' . $filename);
+            $categoryImage->setImageLink($filename);
             $categoryImage->setCategory($category);
             $this->entityManager->persist($categoryImage);
 
