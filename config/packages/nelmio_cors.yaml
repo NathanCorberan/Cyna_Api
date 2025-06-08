@@ -16,4 +16,11 @@ nelmio_cors:
             expose_headers: ['Link', 'X-Cart-Token']
             allow_credentials: true
             max_age: 3600
+        '^/assets/':
+            allow_origin: ['http://localhost:5173', 'http://127.0.0.1:5173', 'http://cyna.juku7704.odns.fr']
+            allow_methods: ['GET', 'OPTIONS']
+            allow_headers: ['*']
+            expose_headers: []
+            max_age: 3600
+            allow_credentials: false
         '^/': null
