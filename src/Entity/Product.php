@@ -67,7 +67,7 @@ class Product
     private ?int $category_id = null;
 
     #[ORM\ManyToOne(inversedBy: 'products')]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\JoinColumn(nullable: true)]
     #[Groups(['Product:read'])]
     private ?Category $category = null;
 

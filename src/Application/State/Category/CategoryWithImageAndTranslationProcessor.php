@@ -76,6 +76,17 @@ class CategoryWithImageAndTranslationProcessor implements ProcessorInterface
         $this->entityManager->persist($category);
         $this->entityManager->flush();
 
+        $this->entityManager->persist($category);
+        $this->entityManager->flush();
+
+        $orphanProducts = $this->entityManager->getRepository(\App\Entity\Product::class)->findBy(['category' => null]);
+        foreach ($orphanProducts as $product) {
+            $product->setCategory($category);
+            $this->entityManager->persist($product);
+        }
+        $this->entityManager->flush();
+
+
         return $category;
     }
 
