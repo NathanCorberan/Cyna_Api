@@ -20,6 +20,8 @@ use App\Application\State\Category\CategoryProductsProvider;
 use App\Dto\Product\ProductDetailsOutputDto;
 use App\Application\State\Category\CategoryWithImageAndTranslationProcessor;
 use App\Application\State\Category\CategoryCollectionProvider;
+use App\Application\State\Category\CategoryCascadeDeleteProcessor;
+
 
 
 #[ORM\Entity(repositoryClass: CategoryRepository::class)]
@@ -39,7 +41,10 @@ use App\Application\State\Category\CategoryCollectionProvider;
             inputFormats: ['multipart' => ['multipart/form-data']],
         ),
         new Patch(security: "is_granted('ROLE_ADMIN')"), // 🔒 Admin seulement
-        new Delete(security: "is_granted('ROLE_ADMIN')"), // 🔒 Admin seulement
+        new Delete(
+            processor: CategoryCascadeDeleteProcessor::class,
+            security: "is_granted('ROLE_ADMIN')"
+        ),
         new GetCollection(
             uriTemplate: '/categorie/{id}/products',
             name: 'get_category_products',

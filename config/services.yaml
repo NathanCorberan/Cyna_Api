@@ -97,3 +97,7 @@ services:
     App\Application\State\Category\CategoryWithImageAndTranslationProcessor:
         arguments:
             $projectDir: '%kernel.project_dir%'
+    
+    App\Application\State\Category\CategoryCascadeDeleteProcessor:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
