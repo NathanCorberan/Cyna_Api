@@ -15,12 +15,12 @@ use ApiPlatform\Metadata\Delete;
 use ApiPlatform\Metadata\GetCollection;
 use Symfony\Component\Serializer\Annotation\Groups;
 
-//nique
 use Symfony\Component\Validator\Constraints as Assert;
 use App\Application\State\Product\ProductDataPersister;
 use App\Application\State\Product\ProductProvider;
 use App\Application\State\Product\ProductItemProvider;
 use App\Application\State\Product\TopOrdersProductProvider;
+use App\Application\State\Product\ProductWithImageAndTranslationProcessor;
 
 #[ORM\Entity(repositoryClass: ProductRepository::class)]
 #[ApiResource(
@@ -29,9 +29,14 @@ use App\Application\State\Product\TopOrdersProductProvider;
     operations: [
         new GetCollection(security: "is_granted('PUBLIC_ACCESS')", provider: ProductProvider::class),
         new Get(security: "is_granted('PUBLIC_ACCESS')", provider: ProductItemProvider::class),
-        new Post(security: "is_granted('ROLE_ADMIN')"),
+        new Post(
+            processor: ProductWithImageAndTranslationProcessor::class,
+            security: "is_granted('ROLE_ADMIN')",
+            input: false,
+            inputFormats: ['multipart' => ['multipart/form-data']],
+        ),
         new Patch(security: "is_granted('ROLE_ADMIN')", uriTemplate: '/products/{id}'),
-        new Delete(security: "is_granted('ROLE_ADMIN')", uriTemplate: '/products/{id}'), # ⛔️ PAS de processor ici
+        new Delete(security: "is_granted('ROLE_ADMIN')", uriTemplate: '/products/{id}'),
         new Get(
             uriTemplate: '/top/products',
             name: 'products_top',

@@ -18,7 +18,7 @@ class CategoryWithImageAndTranslationProcessor implements ProcessorInterface
         private RequestStack $requestStack,
         private EntityManagerInterface $entityManager,
         private string $projectDir,
-        private AzureTranslateService $translator // ✅ OBLIGATOIRE pour l’autoTranslate
+        private AzureTranslateService $translator
     ) {}
 
     public function process(mixed $data, Operation $operation, array $uriVariables = [], array $context = []): mixed
