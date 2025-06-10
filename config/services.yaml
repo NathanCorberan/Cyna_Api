@@ -105,3 +105,5 @@ services:
     App\Application\State\Product\ProductWithImageAndTranslationProcessor:
         arguments:
             $projectDir: '%kernel.project_dir%'
+    
+    App\Service\StripeProductManager: ~

@@ -10,7 +10,9 @@ use App\Entity\Product;
 use App\Entity\ProductImage;
 use App\Entity\ProductLangage;
 use App\Entity\Category;
+use App\Entity\SubscriptionType;
 use App\Service\AzureTranslateService;
+use App\Service\StripeProductManager;
 
 class ProductWithImageAndTranslationProcessor implements ProcessorInterface
 {
@@ -18,7 +20,8 @@ class ProductWithImageAndTranslationProcessor implements ProcessorInterface
         private RequestStack $requestStack,
         private EntityManagerInterface $entityManager,
         private string $projectDir,
-        private AzureTranslateService $translator
+        private AzureTranslateService $translator,
+        private StripeProductManager $stripeProductManager
     ) {}
 
     public function process(mixed $data, Operation $operation, array $uriVariables = [], array $context = []): mixed
@@ -35,7 +38,6 @@ class ProductWithImageAndTranslationProcessor implements ProcessorInterface
         $imageFile = $request->files->get('imageFile');
 
         $product = new Product();
-        $product->setNameForLocale($lang); // setter custom si utile
         $product->setStatus($status);
         $product->setAvailableStock($stock);
         $product->setCreationDate(date('Y-m-d H:i:s'));
@@ -69,7 +71,7 @@ class ProductWithImageAndTranslationProcessor implements ProcessorInterface
             $product->addProductImage($productImage);
         }
 
-        // Traduction FR <-> EN
+        // Traductions
         $translations = $this->autoTranslate($name, $description, $lang);
 
         foreach ($translations as $code => $traduction) {
@@ -80,6 +82,27 @@ class ProductWithImageAndTranslationProcessor implements ProcessorInterface
             $productLang->setDescription($traduction['description']);
             $this->entityManager->persist($productLang);
             $product->addProductLangage($productLang);
+        }
+
+        // SubscriptionTypes
+        $subscriptions = $request->request->all('subscriptionTypes');
+        foreach ($subscriptions as $subDataJson) {
+            $data = json_decode($subDataJson, true);
+            if (!is_array($data) || empty($data['type']) || empty($data['price'])) {
+                continue;
+            }
+
+            $subscription = new SubscriptionType();
+            $subscription->setType($data['type']);
+            $subscription->setPrice($data['price']);
+            $subscription->setProduct($product);
+
+            // Appel Stripe
+            $stripePriceId = $this->stripeProductManager->createPriceForProduct($product, $data['price'], $data['type']);
+            $subscription->setStripePriceId($stripePriceId);
+
+            $this->entityManager->persist($subscription);
+            $product->addSubscriptionType($subscription);
         }
 
         $this->entityManager->persist($product);
