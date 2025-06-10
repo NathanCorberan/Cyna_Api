@@ -92,7 +92,7 @@ class ProductImage
         return $this->product_id;
     }
 
-    public function setProductId(?int $product_id): static // ✅ Correction du setter (avant `setProducId`)
+    public function setProductId(?int $product_id): static
     {
         $this->product_id = $product_id;
         return $this;

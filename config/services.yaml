@@ -107,3 +107,7 @@ services:
             $projectDir: '%kernel.project_dir%'
     
     App\Service\StripeProductManager: ~
+
+    App\Application\State\Product\ProductUpdateProcessor:
+        arguments:
+            $projectDir: '%kernel.project_dir%'

@@ -21,6 +21,8 @@ use App\Application\State\Product\ProductProvider;
 use App\Application\State\Product\ProductItemProvider;
 use App\Application\State\Product\TopOrdersProductProvider;
 use App\Application\State\Product\ProductWithImageAndTranslationProcessor;
+use App\Application\State\Product\ProductUpdateProcessor;
+
 
 #[ORM\Entity(repositoryClass: ProductRepository::class)]
 #[ApiResource(
@@ -35,7 +37,13 @@ use App\Application\State\Product\ProductWithImageAndTranslationProcessor;
             input: false,
             inputFormats: ['multipart' => ['multipart/form-data']],
         ),
-        new Patch(security: "is_granted('ROLE_ADMIN')", uriTemplate: '/products/{id}'),
+        new Post(
+            uriTemplate: '/products/{id}/update',
+            processor: ProductUpdateProcessor::class,
+            security: "is_granted('ROLE_ADMIN')",
+            input: false,
+            inputFormats: ['multipart' => ['multipart/form-data']],
+        ),
         new Delete(security: "is_granted('ROLE_ADMIN')", uriTemplate: '/products/{id}'),
         new Get(
             uriTemplate: '/top/products',
