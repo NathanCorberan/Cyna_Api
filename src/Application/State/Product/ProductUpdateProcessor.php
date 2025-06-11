@@ -160,7 +160,7 @@ class ProductUpdateProcessor implements ProcessorInterface
             }
         }
 
-        // Modification / ajout des abonnements
+        // Ici on récupère la chaîne JSON complète dans un seul champ 'subscriptionTypes'
         $subscriptionsJson = $request->request->get('subscriptionTypes');
 
         if ($subscriptionsJson) {

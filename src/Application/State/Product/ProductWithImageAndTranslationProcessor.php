@@ -34,15 +34,15 @@ class ProductWithImageAndTranslationProcessor implements ProcessorInterface
         $status = $request->request->get('status', 'Disponible');
         $stock = (int) $request->request->get('available_stock', 0);
         $categoryId = $request->request->get('category_id');
-        /** @var UploadedFile|null $imageFile */
-        $imageFile = $request->files->get('imageFile');
+
+        /** @var UploadedFile|array|null $imageFiles */
+        $imageFiles = $request->files->get('imageFile');
 
         $product = new Product();
         $product->setStatus($status);
         $product->setAvailableStock($stock);
         $product->setCreationDate(date('Y-m-d H:i:s'));
 
-        // Lien à la catégorie
         if ($categoryId) {
             $category = $this->entityManager->getRepository(Category::class)->find($categoryId);
             if ($category) {
@@ -50,13 +50,22 @@ class ProductWithImageAndTranslationProcessor implements ProcessorInterface
             }
         }
 
-        // Image
-        if ($imageFile) {
-            $uploadDir = $this->projectDir . '/public/assets/images/products/';
-            if (!is_dir($uploadDir)) {
-                mkdir($uploadDir, 0777, true);
-            }
+        // Gestion des images — supporte tableau ou fichier unique
+        if (!$imageFiles) {
+            $imageFiles = [];
+        } elseif (!is_array($imageFiles)) {
+            $imageFiles = [$imageFiles];
+        }
 
+        $uploadDir = $this->projectDir . '/public/assets/images/products/';
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0777, true);
+        }
+
+        foreach ($imageFiles as $imageFile) {
+            if (!$imageFile instanceof UploadedFile) {
+                continue;
+            }
             $originalName = pathinfo($imageFile->getClientOriginalName(), PATHINFO_FILENAME);
             $safeName = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $originalName);
             $filename = $safeName . '_' . uniqid() . '.' . $imageFile->guessExtension();
@@ -73,7 +82,6 @@ class ProductWithImageAndTranslationProcessor implements ProcessorInterface
 
         // Traductions
         $translations = $this->autoTranslate($name, $description, $lang);
-
         foreach ($translations as $code => $traduction) {
             $productLang = new ProductLangage();
             $productLang->setProduct($product);
@@ -84,25 +92,28 @@ class ProductWithImageAndTranslationProcessor implements ProcessorInterface
             $product->addProductLangage($productLang);
         }
 
-        // SubscriptionTypes
-        $subscriptions = $request->request->all('subscriptionTypes');
-        foreach ($subscriptions as $subDataJson) {
-            $data = json_decode($subDataJson, true);
-            if (!is_array($data) || empty($data['type']) || empty($data['price'])) {
-                continue;
+        // Gestion subscriptions : attend une chaîne JSON unique
+        $subscriptionsJson = $request->request->get('subscriptionTypes');
+        if ($subscriptionsJson) {
+            $subscriptionsData = json_decode($subscriptionsJson, true);
+            if (is_array($subscriptionsData)) {
+                foreach ($subscriptionsData as $data) {
+                    if (empty($data['type']) || empty($data['price'])) {
+                        continue;
+                    }
+
+                    $subscription = new SubscriptionType();
+                    $subscription->setType($data['type']);
+                    $subscription->setPrice($data['price']);
+                    $subscription->setProduct($product);
+
+                    $stripePriceId = $this->stripeProductManager->createPriceForProduct($product, $data['price'], $data['type']);
+                    $subscription->setStripePriceId($stripePriceId);
+
+                    $this->entityManager->persist($subscription);
+                    $product->addSubscriptionType($subscription);
+                }
             }
-
-            $subscription = new SubscriptionType();
-            $subscription->setType($data['type']);
-            $subscription->setPrice($data['price']);
-            $subscription->setProduct($product);
-
-            // Appel Stripe
-            $stripePriceId = $this->stripeProductManager->createPriceForProduct($product, $data['price'], $data['type']);
-            $subscription->setStripePriceId($stripePriceId);
-
-            $this->entityManager->persist($subscription);
-            $product->addSubscriptionType($subscription);
         }
 
         $this->entityManager->persist($product);
@@ -119,7 +130,7 @@ class ProductWithImageAndTranslationProcessor implements ProcessorInterface
             $to => [
                 'name' => $this->translator->translate($name, $from, $to),
                 'description' => $this->translator->translate($desc, $from, $to),
-            ]
+            ],
         ];
     }
 }
