@@ -22,6 +22,7 @@ use App\Application\State\Product\ProductItemProvider;
 use App\Application\State\Product\TopOrdersProductProvider;
 use App\Application\State\Product\ProductWithImageAndTranslationProcessor;
 use App\Application\State\Product\ProductUpdateProcessor;
+use App\Application\State\Product\ProductDeleteProcessor;
 
 
 #[ORM\Entity(repositoryClass: ProductRepository::class)]
@@ -44,7 +45,11 @@ use App\Application\State\Product\ProductUpdateProcessor;
             input: false,
             inputFormats: ['multipart' => ['multipart/form-data']],
         ),
-        new Delete(security: "is_granted('ROLE_ADMIN')", uriTemplate: '/products/{id}'),
+        new Delete(
+            security: "is_granted('ROLE_ADMIN')", 
+            uriTemplate: '/products/{id}',
+            processor: ProductDeleteProcessor::class
+        ),
         new Get(
             uriTemplate: '/top/products',
             name: 'products_top',
@@ -83,6 +88,9 @@ class Product
     #[ORM\JoinColumn(nullable: true)]
     #[Groups(['Product:read'])]
     private ?Category $category = null;
+
+    #[ORM\Column(type: 'string', nullable: true)]
+    private $stripeProductId;
 
     /**
      * @var Collection<int, ProductLangage>
@@ -311,6 +319,15 @@ class Product
             return $this->getProductLangages()->first()->getName();
         }
         return null;
+    }
+
+    public function getStripeProductId(): ?string 
+    { 
+        return $this->stripeProductId; 
+    }
+    public function setStripeProductId(?string $id): self 
+    { 
+        $this->stripeProductId = $id; return $this; 
     }
 
 }

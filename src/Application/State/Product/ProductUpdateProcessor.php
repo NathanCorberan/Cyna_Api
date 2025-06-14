@@ -11,6 +11,7 @@ use App\Entity\Product;
 use App\Entity\ProductImage;
 use App\Entity\ProductLangage;
 use App\Entity\Category;
+use App\Entity\SubscriptionType;
 use App\Service\AzureTranslateService;
 use App\Service\StripeProductManager;
 
@@ -29,7 +30,6 @@ class ProductUpdateProcessor implements ProcessorInterface
         /** @var Product $product */
         $product = $data;
         $request = $this->requestStack->getCurrentRequest();
-
         $postData = $request->request->all();
 
         $status = $postData['status'] ?? null;
@@ -38,7 +38,6 @@ class ProductUpdateProcessor implements ProcessorInterface
         $name = $postData['name'] ?? null;
         $description = $postData['description'] ?? null;
         $lang = $postData['lang'] ?? 'fr';
-
         $imageFiles = $request->files->get('imageFile');
 
         if ($status !== null) {
@@ -69,10 +68,7 @@ class ProductUpdateProcessor implements ProcessorInterface
         }
 
         foreach ($imageFiles as $i => $imageFile) {
-            if (!$imageFile instanceof UploadedFile) {
-                continue;
-            }
-
+            if (!$imageFile instanceof UploadedFile) continue;
             $originalName = pathinfo($imageFile->getClientOriginalName(), PATHINFO_FILENAME);
             $safeName = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $originalName);
             $filename = $safeName . '_' . uniqid() . '.' . $imageFile->guessExtension();
@@ -133,10 +129,7 @@ class ProductUpdateProcessor implements ProcessorInterface
             $translations = $this->autoTranslate($name, $description, $lang);
 
             foreach ($translations as $code => $translation) {
-                if ($code === $lang) {
-                    continue;
-                }
-
+                if ($code === $lang) continue;
                 $existingLang = null;
                 foreach ($product->getProductLangages() as $pl) {
                     if ($pl->getCode() === $code) {
@@ -144,7 +137,6 @@ class ProductUpdateProcessor implements ProcessorInterface
                         break;
                     }
                 }
-
                 if ($existingLang) {
                     $existingLang->setName($translation['name']);
                     $existingLang->setDescription($translation['description']);
@@ -160,56 +152,57 @@ class ProductUpdateProcessor implements ProcessorInterface
             }
         }
 
-        // Ici on récupère la chaîne JSON complète dans un seul champ 'subscriptionTypes'
         $subscriptionsJson = $request->request->get('subscriptionTypes');
-
         if ($subscriptionsJson) {
             $subscriptionsData = json_decode($subscriptionsJson, true);
             if (is_array($subscriptionsData)) {
-                // Indexe les abonnements existants par type
                 $existingSubsByType = [];
                 foreach ($product->getSubscriptionTypes() as $existingSub) {
                     $existingSubsByType[$existingSub->getType()] = $existingSub;
                 }
-
+                $stripeProductId = $product->getStripeProductId();
+                if (!$stripeProductId) {
+                    $stripeProductId = $this->stripeProductManager->createStripeProduct(
+                        $product,
+                        $name ?? $product->getNameForLocale('fr') ?? 'Produit',
+                        $description ?? null
+                    );
+                    $product->setStripeProductId($stripeProductId);
+                }
                 foreach ($subscriptionsData as $data) {
                     if (empty($data['type']) || empty($data['price'])) {
                         continue;
                     }
-
                     if (isset($existingSubsByType[$data['type']])) {
-                        // Modifie l'abonnement existant
                         $sub = $existingSubsByType[$data['type']];
+                        if ($sub->getStripePriceId()) {
+                            $this->stripeProductManager->archivePrice($sub->getStripePriceId());
+                        }
+
                         $sub->setPrice($data['price']);
-
-                        $stripePriceId = $this->stripeProductManager->createPriceForProduct($product, $data['price'], $data['type']);
+                        $stripePriceId = $this->stripeProductManager->createPriceForProduct(
+                            $stripeProductId,
+                            $data['price'],
+                            $data['type']
+                        );
                         $sub->setStripePriceId($stripePriceId);
-
                         $this->entityManager->persist($sub);
-
                         unset($existingSubsByType[$data['type']]);
                     } else {
-                        // Création d'un nouvel abonnement
-                        $subscriptionType = new \App\Entity\SubscriptionType();
+                        $subscriptionType = new SubscriptionType();
                         $subscriptionType->setType($data['type']);
                         $subscriptionType->setPrice($data['price']);
                         $subscriptionType->setProduct($product);
-
-                        $stripePriceId = $this->stripeProductManager->createPriceForProduct($product, $data['price'], $data['type']);
+                        $stripePriceId = $this->stripeProductManager->createPriceForProduct(
+                            $stripeProductId,
+                            $data['price'],
+                            $data['type']
+                        );
                         $subscriptionType->setStripePriceId($stripePriceId);
-
                         $this->entityManager->persist($subscriptionType);
                         $product->addSubscriptionType($subscriptionType);
                     }
                 }
-
-                // Si tu souhaites supprimer les abonnements non reçus, décommente la partie suivante :
-                /*
-                foreach ($existingSubsByType as $subToDelete) {
-                    $product->removeSubscriptionType($subToDelete);
-                    $this->entityManager->remove($subToDelete);
-                }
-                */
             }
         }
 
@@ -222,7 +215,6 @@ class ProductUpdateProcessor implements ProcessorInterface
     private function autoTranslate(string $name, string $desc, string $from): array
     {
         $to = $from === 'fr' ? 'en' : 'fr';
-
         return [
             $from => ['name' => $name, 'description' => $desc],
             $to => [

@@ -111,3 +111,7 @@ services:
     App\Application\State\Product\ProductUpdateProcessor:
         arguments:
             $projectDir: '%kernel.project_dir%'
+    
+    App\Application\State\Product\ProductDeleteProcessor:
+        arguments:
+            $projectDir: '%kernel.project_dir%'

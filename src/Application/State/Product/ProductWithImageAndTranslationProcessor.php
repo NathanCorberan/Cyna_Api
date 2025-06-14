@@ -92,6 +92,14 @@ class ProductWithImageAndTranslationProcessor implements ProcessorInterface
             $product->addProductLangage($productLang);
         }
 
+        // --- Création du produit Stripe (UN SEUL produit pour toutes les subscriptions)
+        $stripeProductId = $this->stripeProductManager->createStripeProduct(
+            $product,
+            $name ?? 'Produit',
+            $description ?? null
+        );
+        $product->setStripeProductId($stripeProductId);
+
         // Gestion subscriptions : attend une chaîne JSON unique
         $subscriptionsJson = $request->request->get('subscriptionTypes');
         if ($subscriptionsJson) {
@@ -107,7 +115,11 @@ class ProductWithImageAndTranslationProcessor implements ProcessorInterface
                     $subscription->setPrice($data['price']);
                     $subscription->setProduct($product);
 
-                    $stripePriceId = $this->stripeProductManager->createPriceForProduct($product, $data['price'], $data['type']);
+                    $stripePriceId = $this->stripeProductManager->createPriceForProduct(
+                        $stripeProductId,
+                        $data['price'],
+                        $data['type']
+                    );
                     $subscription->setStripePriceId($stripePriceId);
 
                     $this->entityManager->persist($subscription);
