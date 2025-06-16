@@ -20,7 +20,7 @@ RUN composer install
 RUN composer dump-env prod
 
 # ---------- 2) Production stage: PHP-FPM (Alpine) ----------
-FROM php:8.2-fpm-alpine AS production
+FROM php:8.4-fpm-alpine AS production
 
 # Installe toutes les dépendances nécessaires
 RUN apk add --no-cache \
@@ -42,6 +42,11 @@ WORKDIR /var/www
 
 # Copie tout le projet et les vendors déjà générés depuis le builder
 COPY --from=builder /app /var/www
+
+# Fixe les permissions pour tous les sous-dossiers de /assets/images
+RUN mkdir -p /var/www/public/assets/images \
+    && chown -R app:app /var/www/public/assets/images \
+    && chmod -R 755 /var/www/public/assets/images
 
 COPY docker/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
