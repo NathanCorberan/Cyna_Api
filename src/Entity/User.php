@@ -12,9 +12,11 @@ use App\Application\State\User\UserPasswordHasher;
 use App\Application\State\User\UserMeProvider;
 use App\Application\State\User\UserPasswordChangeStateProcessor;
 use App\Application\State\User\UserUpdateProcessor;
+use App\Application\State\User\UserListProvider;
 
 use App\Dto\User\PasswordChangeDto;
 use App\Dto\User\UserUpdateDto;
+use App\Dto\User\UserListDto;
 
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Get;
@@ -24,6 +26,7 @@ use ApiPlatform\Metadata\Delete;
 use ApiPlatform\Metadata\GetCollection;
 use Symfony\Component\Serializer\Annotation\Groups;
 
+
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_EMAIL', fields: ['email'])]
 #[ApiResource(
@@ -32,6 +35,17 @@ use Symfony\Component\Serializer\Annotation\Groups;
     processor: UserPasswordHasher::class,
     security: "is_granted('ROLE_ADMIN') or object == user",
     operations: [
+        new GetCollection(
+            uriTemplate: '/users/all',
+            output: \App\Dto\User\UserListDto::class,
+            provider: \App\Application\State\User\UserListProvider::class,
+            normalizationContext: ['groups' => ['User:list']],
+            security: "is_granted('ROLE_ADMIN')",
+            openapi: new \ApiPlatform\OpenApi\Model\Operation(
+                summary: 'Liste simplifiée des utilisateurs',
+                tags: ['User']
+            )
+        ),
         new GetCollection(
             security: "is_granted('ROLE_ADMIN')",
             openapi: new \ApiPlatform\OpenApi\Model\Operation(
@@ -76,6 +90,7 @@ use Symfony\Component\Serializer\Annotation\Groups;
                 tags: ['User']
             )
         ),
+        
     ]
 )]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
