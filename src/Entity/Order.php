@@ -22,6 +22,8 @@ use App\Application\State\Cart\CreateCartProcessor;
 use App\Application\State\Checkout\CheckoutState;
 use App\Dto\Order\UserOrderOutputDto;
 use App\Application\State\Order\UserOrdersProvider;
+use App\Dto\Order\OrderOutputDto;
+use App\Application\State\Order\OrderOutputProvider;
 
 
 #[ORM\Entity(repositoryClass: OrderRepository::class)]
@@ -55,12 +57,17 @@ use App\Application\State\Order\UserOrdersProvider;
             processor: CheckoutState::class,
             security: "is_granted('IS_AUTHENTICATED_FULLY')"
         ),
+        new GetCollection(
+            uriTemplate: '/orders-processed',
+            output: OrderOutputDto::class,
+            provider: OrderOutputProvider::class,
+            normalizationContext: ['groups' => ['Order:output']],
+            security: "is_granted('ROLE_ADMIN')",
+        ),
     ],
 )]
 class Order
 {
-    // ✅ STATUSES valides (PHP side)
-    //public static array $allowedStatuses = ['cart', 'payed', 'refunded'];
     public static array $allowedStatuses = ['cart', 'payed'];
 
     #[ORM\Id]
