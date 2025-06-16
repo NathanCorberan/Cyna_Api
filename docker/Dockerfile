@@ -20,7 +20,7 @@ RUN composer install
 RUN composer dump-env prod
 
 # ---------- 2) Production stage: PHP-FPM (Alpine) ----------
-FROM php:8.4-fpm-alpine AS production
+FROM php:8.2-fpm-alpine AS production
 
 # Installe toutes les dépendances nécessaires
 RUN apk add --no-cache \
@@ -50,16 +50,7 @@ RUN chmod +x /entrypoint.sh
 RUN addgroup -g 1000 app && adduser -u 1000 -G app -s /sbin/nologin -D app \
     && chown -R app:app /var/www
 
-# Configure PHP pour permettre les uploads jusqu'à 20 Mo
-RUN echo "upload_max_filesize=20M\npost_max_size=25M" > /usr/local/etc/php/conf.d/99-custom-uploads.ini
-
 USER app
-
-
-# Fixe les permissions pour tous les sous-dossiers de /assets/images
-RUN mkdir -p /var/www/public/assets/images \
-    && chown -R app:app /var/www/public/assets/images \
-    && chmod -R 755 /var/www/public/assets/images
 
 # Expose le port PHP-FPM standard (pas 8000 !)
 EXPOSE 9000
