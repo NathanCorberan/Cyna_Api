@@ -20,7 +20,7 @@ RUN composer install
 RUN composer dump-env prod
 
 # ---------- 2) Production stage: PHP-FPM (Alpine) ----------
-FROM php:8.2-fpm-alpine AS production
+FROM php:8.4-fpm-alpine AS production
 
 # Installe toutes les dépendances nécessaires
 RUN apk add --no-cache \
