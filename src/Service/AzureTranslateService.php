@@ -35,7 +35,7 @@ class AzureTranslateService
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
         // === AJOUTE CETTE LIGNE ===
-        curl_setopt($ch, CURLOPT_CAINFO, 'A:/PHP/extras/ssl/cacert.pem');
+        //curl_setopt($ch, CURLOPT_CAINFO, 'A:/PHP/extras/ssl/cacert.pem');
         // ===========================
 
         $response = curl_exec($ch);
