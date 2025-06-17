@@ -95,11 +95,11 @@ class StripeWebhookController extends AbstractController
                 'date' => (new \DateTime())->format('d/m/Y'),
                 'customer_email' => $user->getEmail(),
                 'items' => [],
-                'total_amount' => number_format($intent->amount / 100, 2),
+                'total_amount' => number_format($invoice->amount_paid / 100, 2),
             ];
 
             foreach ($order->getOrderItems() as $item) {
-                $unitPrice = $item->getPrice(); // adapte selon ton entité
+                $unitPrice = $item->getUnitPrice(); // adapte selon ton entité
                 $qty = $item->getQuantity();
                 $invoiceData['items'][] = [
                     'description' => $item->getProduct()->getName(), // adapte selon tes entités
@@ -172,11 +172,11 @@ class StripeWebhookController extends AbstractController
                 'date' => (new \DateTime())->format('d/m/Y'),
                 'customer_email' => $user->getEmail(),
                 'items' => [],
-                'total_amount' => number_format($intent->amount / 100, 2),
+                'total_amount' => number_format($invoice->amount_paid / 100, 2),
             ];
 
             foreach ($order->getOrderItems() as $item) {
-                $unitPrice = $item->getPrice();
+                $unitPrice = $item->getUnitPrice();
                 $qty = $item->getQuantity();
                 $invoiceData['items'][] = [
                     'description' => $item->getProduct()->getName(),
