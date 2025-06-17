@@ -91,7 +91,7 @@ class StripeWebhookController extends AbstractController
             $order->setStatus('payed');
             $em->flush();
             $invoiceData = [
-                'invoice_id' => $intent->id,
+                'invoice_id' => $invoice->id,
                 'date' => (new \DateTime())->format('d/m/Y'),
                 'customer_email' => $user->getEmail(),
                 'items' => [],
@@ -102,7 +102,7 @@ class StripeWebhookController extends AbstractController
                 $unitPrice = $item->getUnitPrice(); // adapte selon ton entité
                 $qty = $item->getQuantity();
                 $invoiceData['items'][] = [
-                    'description' => $item->getProduct()->getName(), // adapte selon tes entités
+                    'description' => $item->getProduct()->getNameForLocale('fr') ?? 'Produit inconnu',
                     'quantity' => $qty,
                     'unit_price' => number_format($unitPrice, 2),
                     'total_price' => number_format($unitPrice * $qty, 2),
@@ -168,7 +168,7 @@ class StripeWebhookController extends AbstractController
             $order->setStatus('payed');
             $em->flush();
             $invoiceData = [
-                'invoice_id' => $intent->id,
+                'invoice_id' => $invoice->id,
                 'date' => (new \DateTime())->format('d/m/Y'),
                 'customer_email' => $user->getEmail(),
                 'items' => [],
@@ -179,7 +179,7 @@ class StripeWebhookController extends AbstractController
                 $unitPrice = $item->getUnitPrice();
                 $qty = $item->getQuantity();
                 $invoiceData['items'][] = [
-                    'description' => $item->getProduct()->getName(),
+                    'description' => $item->getProduct()->getNameForLocale('fr') ?? 'Produit inconnu',
                     'quantity' => $qty,
                     'unit_price' => number_format($unitPrice, 2),
                     'total_price' => number_format($unitPrice * $qty, 2),
