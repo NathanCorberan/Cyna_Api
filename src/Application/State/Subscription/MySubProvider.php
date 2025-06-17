@@ -8,6 +8,7 @@ use App\Repository\SubscriptionRepository;
 use App\Dto\Subscription\MySubOutputDto;
 use App\Entity\User;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\HttpFoundation\Request;
 
 class MySubProvider implements ProviderInterface
 {
@@ -31,6 +32,12 @@ class MySubProvider implements ProviderInterface
             throw new NotFoundHttpException('User not found.');
         }
 
+        // Récupération du paramètre "lang" depuis la requête
+        /** @var Request|null $request */
+        $request = $context['request'] ?? null;
+        $lang = $request?->query->get('lang', 'fr'); // défaut = 'fr'
+        $lang = strtolower($lang); // sécurité : toujours en minuscule
+
         // Récupère toutes les souscriptions "available" pour l'utilisateur
         $subscriptions = $this->subscriptionRepository->findSubByMe($user->getId());
 
@@ -41,35 +48,33 @@ class MySubProvider implements ProviderInterface
             $dto->endDate = $sub->getEndDate();
             $dto->status = $sub->getStatus();
 
-            // Récupère le type d'abonnement
+            // Type
             $type = $sub->getSubscriptionType();
             $dto->type = $type ? $type->getType() : '';
-            $dto->price = $type ? (float)$type->getPrice() : 0.0; // ← ici
+            $dto->price = $type ? (float)$type->getPrice() : 0.0;
 
-            // Produit relié
+            // Produit
             $product = $type ? $type->getProduct() : null;
             if ($product) {
-                // Titre FR (via productLangages)
                 $dto->productTitle = '';
                 $dto->productDescription = null;
-                foreach ($product->getProductLangages() as $lang) {
-                    if ($lang->getCode() === 'FR') {
-                        $dto->productTitle = $lang->getName();
-                        $dto->productDescription = $lang->getDescription();
+
+                foreach ($product->getProductLangages() as $productLang) {
+                    if (strtolower($productLang->getCode()) === $lang) {
+                        $dto->productTitle = $productLang->getName();
+                        $dto->productDescription = $productLang->getDescription();
                         break;
                     }
                 }
-                // Première image trouvée
-                $dto->productImage = null;
+
                 $images = $product->getProductImages();
-                if (count($images) > 0) {
-                    $dto->productImage = $images[0]->getImageLink();
-                }
+                $dto->productImage = count($images) > 0 ? $images[0]->getImageLink() : null;
             } else {
                 $dto->productTitle = '';
                 $dto->productImage = null;
                 $dto->productDescription = null;
             }
+
             yield $dto;
         }
     }

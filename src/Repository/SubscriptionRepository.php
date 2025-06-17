@@ -24,12 +24,11 @@ class SubscriptionRepository extends ServiceEntityRepository
             ->join('s.subscriptionType', 'st')
             ->join('st.product', 'p')
             ->leftJoin('p.productImages', 'pi')
-            ->leftJoin('p.productLangages', 'pl', 'WITH', 'pl.code = :lang') // On suppose code = 'FR'
+            ->leftJoin('p.productLangages', 'pl')
             ->where('s.user = :userId')
             ->andWhere('s.status = :status')
             ->setParameter('userId', $userId)
-            ->setParameter('status', 'available')
-            ->setParameter('lang', 'FR');
+            ->setParameter('status', 'available');
 
         return $qb->getQuery()->getResult();
     }
