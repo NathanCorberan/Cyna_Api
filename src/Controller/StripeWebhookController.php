@@ -20,7 +20,8 @@ class StripeWebhookController extends AbstractController
         Request $request,
         UserRepository $userRepository,
         OrderRepository $orderRepository,
-        EntityManagerInterface $em
+        EntityManagerInterface $em,
+        MailerService $mailerService
     ) {
         Stripe::setApiKey($_ENV['STRIPE_SECRET_KEY']);
         $payload = $request->getContent();
@@ -88,6 +89,28 @@ class StripeWebhookController extends AbstractController
             // On met la commande à payée **qu'après** avoir inséré les subscriptions
             $order->setStatus('payed');
             $em->flush();
+            $invoiceData = [
+                'invoice_id' => $intent->id,
+                'date' => (new \DateTime())->format('d/m/Y'),
+                'customer_email' => $user->getEmail(),
+                'items' => [],
+                'total_amount' => number_format($intent->amount / 100, 2),
+            ];
+
+            foreach ($order->getOrderItems() as $item) {
+                $unitPrice = $item->getPrice(); // adapte selon ton entité
+                $qty = $item->getQuantity();
+                $invoiceData['items'][] = [
+                    'description' => $item->getProduct()->getName(), // adapte selon tes entités
+                    'quantity' => $qty,
+                    'unit_price' => number_format($unitPrice, 2),
+                    'total_price' => number_format($unitPrice * $qty, 2),
+                ];
+            }
+
+            // Envoi du mail avec la facture HTML
+            $mailerService->sendInvoiceEmail($user->getEmail(), $invoiceData);
+
         }
 
         // Paiement récurrent Stripe (abonnement via invoice)
@@ -143,6 +166,27 @@ class StripeWebhookController extends AbstractController
             }
             $order->setStatus('payed');
             $em->flush();
+            $invoiceData = [
+                'invoice_id' => $intent->id,
+                'date' => (new \DateTime())->format('d/m/Y'),
+                'customer_email' => $user->getEmail(),
+                'items' => [],
+                'total_amount' => number_format($intent->amount / 100, 2),
+            ];
+
+            foreach ($order->getOrderItems() as $item) {
+                $unitPrice = $item->getPrice();
+                $qty = $item->getQuantity();
+                $invoiceData['items'][] = [
+                    'description' => $item->getProduct()->getName(),
+                    'quantity' => $qty,
+                    'unit_price' => number_format($unitPrice, 2),
+                    'total_price' => number_format($unitPrice * $qty, 2),
+                ];
+            }
+
+            // Envoi du mail avec la facture HTML
+            $mailerService->sendInvoiceEmail($user->getEmail(), $invoiceData);
         }
 
         return new Response('Webhook handled', 200);
