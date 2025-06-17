@@ -12,6 +12,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Stripe\Stripe;
 use Stripe\Webhook;
+use App\Service\MailerService;
 
 class StripeWebhookController extends AbstractController
 {
